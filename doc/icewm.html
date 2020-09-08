@@ -1,0 +1,3872 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="generator" content="AsciiDoc">
+<title>IceWM Manual</title>
+</head>
+<body>
+<h1>IceWM Manual</h1>
+<p>
+<strong>Marko Macek</strong><br>
+version 1.4.2,
+2017 November 18
+</p>
+<hr>
+<h2><a name="introduction"></a>Introduction</h2>
+<p>This document is the manual for the <strong>IceWM</strong> X11 window manager.
+The <a href="https://ice-wm.org/man">IceWM manpages</a> provide additional
+documentation.</p>
+<p>The goal of IceWM is to provide a small, fast and familiar window
+manager for the X11 window system, which is compatible with the
+EWMH and ICCCM window manager protocols. Generally, it tries to make
+all functions available both by keyboard and by mouse (this is not
+currently possible when using mouse focus).</p>
+<p>IceWM originally was designed to emulate the look of Motif, OS/2
+Warp 4, OS/2 Warp 3 and Windows 95. Since it has a theming engine
+others styles are possible. A large number of original themes have
+been created and <a href="https://themes.ice-wm.org">published by users</a>.</p>
+<p>Further information can be found at <a href="https://ice-wm.org">the IceWM
+website</a>,
+at the <a href="https://github.com/bbidulock/icewm/">current site of
+development</a>,
+which includes the <a href="https://github.com/bbidulock/icewm/issues/">support
+requests</a>.</p>
+<hr>
+<h2><a name="copying"></a>Copying</h2>
+<p>IceWM and its documentation are covered by a GNU LGPL license,
+which is included in the distribution.</p>
+<hr>
+<h2><a name="first-steps"></a>First steps</h2>
+<h3><a name="icewm-components"></a>IceWM components</h3>
+<p>The IceWM suite consists of the following core applications provided
+by the main package:</p>
+<ul>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm">icewm</a></strong> - The actual window manager
+binary. It handles window placement and draws the window decorations.
+</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewmbg">icewmbg</a></strong> - The background setting
+application. It can assign plain background color or images in
+different formats to the X background. Either shared or separate for
+different workspaces. This program should be started before <code>icewm</code>.
+</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-session">icewm-session</a></strong> - The IceWM
+session manager runs all of the above. This is the preferred program
+to start IceWM.
+</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-menu-fdo">icewm-menu-fdo</a></strong> - This
+generates IceWM program menus from FreeDesktop <code>.desktop</code> files.
+</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewmhint">icewmhint</a></strong> - Is a simple
+utility for passing IceWM hints to IceWM by window class and
+instance. Icewmhint uses a special property, <em>"_ICEWM_WINOPHINT"</em>,
+on the root window to pass special hints to IceWM.
+</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icehelp">icehelp</a></strong> - Is used by icewm
+to display the <em>IceWM manual</em> and the manpages. See the output of
+<code>icehelp --help</code> for details.
+</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icesh">icesh</a></strong> - Could be used to manage
+IceWM internals from the command line.
+</p>
+</li>
+</ul>
+<h3><a name="starting-icewm"></a>Starting icewm</h3>
+<p>The <code>icewm</code> program alone is suitable for use with desktop environments
+like GNOME. If you wish to run the whole IceWM suite (WM, background
+changer, Docklet support, and startup/shutdown script handling), use
+the <code>icewm-session</code> binary instead of pure <code>icewm</code>. Note that this
+is not a complete Session Manager but it helps to automate the startup.</p>
+<p>First make sure that you choose the correct
+<a href="https://www.tldp.org/HOWTO/XWindow-User-HOWTO/runningx.html">X startup</a>
+script in your home directory. For most distributions either the
+file <code>$HOME/.xsession</code> or <code>$HOME/.xinitrc</code> is honored by startx and
+X display managers like KDM. On RedHat, the <code>$HOME/.Xclients</code> may
+be used instead. In all cases, choose the one recommended by your
+distribution and make sure that there is no concurrency between the
+X startup scripts. Ensure that the script is executable. Mine looks
+something like this:</p>
+<table border="0" bgcolor="#e8e8e8" width="100%" cellpadding="4"><tr><td>
+<pre><code>#!/bin/bash
+# run profile to set $PATH and other env vars correctly
+. $HOME/.bash_profile
+# setup touchpad and the external mouse
+xset m 7 2
+xinput set-ptr-feedback 0 7 1.9 1
+
+# start icewm-session
+exec icewm-session
+xterm</code></pre>
+</td></tr></table>
+<p>The xterm on the last line is there simply to make sure that your X
+session doesn&#8217;t crash if IceWM does (should never happen). You can
+restart IceWM from there or start some other window manager. The
+session will close if you close the xterm.</p>
+<h3><a name="startup-and-shutdown-scripts"></a>Startup and shutdown scripts</h3>
+<p>After initialization <code>icewm-session</code> will search the resource
+path for a <code>startup</code> script. If this file is found and if it is
+executable <code>icewm-session</code> will run this script. During termination of
+<code>icewm-session</code> the <code>shutdown</code> script is executed.</p>
+<p>Example <code>~/.icewm/startup</code> script:</p>
+<table border="0" bgcolor="#e8e8e8" width="100%" cellpadding="4"><tr><td>
+<pre><code>#!/bin/bash
+
+[ -x ~/.icewm/restart ] &amp;&amp; source ~/.icewm/restart
+
+gnome-terminal --geometry 80x25+217+235 &amp;
+xscreensaver &amp;</code></pre>
+</td></tr></table>
+<p>On termination the <code>shutdown</code> script will be run first, then
+<code>icewm-session</code> will terminate icewm and icewmbg.</p>
+<table frame="void" cellpadding="4">
+<tr valign="top">
+<td>
+<p><b><u>Tip</u></b></p>
+</td>
+<td style="border-left: 1px solid silver;"><code>icewm-session</code> is meant for easy desktop initialization and it
+is part of IceWM due to popular demand. For more sophisticated session
+management one could use a real session manager. IceWM supports the
+XSESSION protocol.</td></tr></table>
+<h3><a name="extra-session-environment"></a>Extra session environment</h3>
+<p>Please note that if icewm-session is used as the only startup mechanism
+(without having .xsession involved), one can write additional
+environment settings into the file <code>$HOME/.icewm/env</code>. Expansion
+of simple shell style variables should be supported on most
+platforms. Shell command expansion is supported if <code>wordexp</code> was
+configured. This extra environment is only effective in applications
+started by icewm-session and their subprocesses.</p>
+<p>Example <code>env</code>:</p>
+<pre><code>PATH=~/bin:$PATH
+LANG=de_DE.UTF-8</code></pre>
+<hr>
+<h2><a name="focus-models"></a>Focus models</h2>
+<p>IceWM implements four general focus models:</p>
+<ul>
+<li>
+<p>
+<strong>clickToRaise</strong>
+</p>
+<p>Exactly like Win95, OS/2 Warp. When window is clicked with a mouse,
+it is raised and activated.</p>
+</li>
+<li>
+<p>
+<strong>clickToFocus</strong>
+</p>
+<p>Window is raised and focused when titlebar or frame border is
+clicked. Window is focused but not raised when window interior
+is clicked.</p>
+</li>
+<li>
+<p>
+<strong>pointerFocus</strong>
+</p>
+<p>When the mouse is moved, focus is set to window under a mouse. It
+should be possible to change focus with the keyboard when mouse is
+not moved.</p>
+</li>
+<li>
+<p>
+<strong>explicitFocus</strong>
+</p>
+<p>When a window is clicked, it is activated, but not raised. New windows
+do not automatically get the focus unless they are transient windows
+for the active window.</p>
+</li>
+</ul>
+<p>Detailed configuration is possible using the configuration file
+options.</p>
+<hr>
+<h2><a name="mouse-commands"></a>Mouse Commands</h2>
+<h3><a name="frame-commands"></a>Frame Commands</h3>
+<ul>
+<li>
+<p>
+<strong>Left Button</strong>
+</p>
+<p>Select and raise the window. On the window frame, resize the window.</p>
+</li>
+<li>
+<p>
+<strong>Right Button</strong>
+</p>
+<p>When dragged, moves the window. When clicked, displays the context
+menu.</p>
+</li>
+</ul>
+<h3><a name="title-bar-commands"></a>Title Bar Commands</h3>
+<ul>
+<li>
+<p>
+<strong>Any Button Drag</strong>
+</p>
+<p>Move the window.</p>
+</li>
+<li>
+<p>
+<strong>Alt + Left Button</strong>
+</p>
+<p>Lower the window.</p>
+</li>
+<li>
+<p>
+<strong>Left Button Double Click</strong>
+</p>
+<p>Maximize/Restore the window.</p>
+</li>
+<li>
+<p>
+<strong>Middle Button Double Click</strong>
+</p>
+<p>Rollup/Unroll the window.</p>
+</li>
+</ul>
+<p>The Ctrl key can be used together with a mouse button to prevent a
+window from being raised to the top of the stack.</p>
+<h3><a name="taskbar-commands"></a>Taskbar commands</h3>
+<ul>
+<li>
+<p>
+<strong>Left Button Click</strong>
+</p>
+<p>Activate the workspace with the window and raise the window. Toggles
+the minimized/active state of the window.</p>
+</li>
+<li>
+<p>
+<strong>Shift + Left Button Click</strong>
+</p>
+<p>Move window to current workspace. This only works when windows from
+all workspaces are shown on the taskbar all the time.</p>
+</li>
+<li>
+<p>
+<strong>Control + Left Button Click</strong>
+</p>
+<p>Minimize/restore the window.</p>
+</li>
+<li>
+<p>
+<strong>Middle Button Click</strong>
+</p>
+<p>Toggle raised/lowered state of the window.</p>
+</li>
+<li>
+<p>
+<strong>Shift + Middle Button Click</strong>
+</p>
+<p>Add the window to the current workspace.</p>
+</li>
+<li>
+<p>
+<strong>Control + Middle Button Click</strong>
+</p>
+<p>Lower the window.</p>
+</li>
+<li>
+<p>
+<strong>Right Button Click</strong>
+</p>
+<p>Display a context menu.</p>
+</li>
+</ul>
+<hr>
+<h2><a name="keyboard-commands"></a>Keyboard Commands</h2>
+<p>The Alt key is assumed to be the key defined as the Mod1 modifier.</p>
+<ul>
+<li>
+<p>
+<code>Alt+F1</code>
+</p>
+<p>Raise the window.</p>
+</li>
+<li>
+<p>
+<code>Alt+F2</code>
+</p>
+<p>Make a window occupy all desktops.</p>
+</li>
+<li>
+<p>
+<code>Alt+F3</code>
+</p>
+<p>Lower the window to the bottom of the stack.</p>
+</li>
+<li>
+<p>
+<code>Alt+F4</code>
+</p>
+<p>Close the window.</p>
+</li>
+<li>
+<p>
+<code>Alt+F5</code>
+</p>
+<p>Restore the window state if maximized or minimized/hidden.</p>
+</li>
+<li>
+<p>
+<code>Alt+F6</code>
+</p>
+<p>Focus to next window.</p>
+</li>
+<li>
+<p>
+<code>Alt+Shift+F6</code>
+</p>
+<p>Focus to previous window.</p>
+</li>
+<li>
+<p>
+<code>Alt+F7</code>
+</p>
+<p>Starts movement of the active window. Move the window either by the
+mouse or by the arrow keys. The arrow keys can be accelerated four
+times by the Shift key or sixteen times by the Control key. Press
+the left button or the Enter key when done. To cancel press Escape.</p>
+</li>
+<li>
+<p>
+<code>Alt+F8</code>
+</p>
+<p>Starts resizing of the active window. Resize the window either by the
+mouse or by the arrow keys. The arrow keys can be accelerated four
+times by the Shift key or sixteen times by the Control key. Press
+the left button or the Enter key when done. To cancel press Escape.</p>
+</li>
+<li>
+<p>
+<code>Alt+F9</code>
+</p>
+<p>Minimize the window to taskbar.</p>
+</li>
+<li>
+<p>
+<code>Alt+F10</code>
+</p>
+<p>Maximize the window.</p>
+</li>
+<li>
+<p>
+<code>Alt+Shift+F10</code>
+</p>
+<p>Maximize the window vertically (toggle).</p>
+</li>
+<li>
+<p>
+<code>Alt+F11</code>
+</p>
+<p>Hide the window (appears in window list, but not on taskbar).</p>
+</li>
+<li>
+<p>
+<code>Alt+F12</code>
+</p>
+<p>Rollup the window.</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Escape</code>
+</p>
+<p>Show the start menu.</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+Escape</code>
+</p>
+<p>Show the window list.</p>
+</li>
+<li>
+<p>
+<code>Shift+Escape</code>
+</p>
+<p>Show the system-menu of the window.</p>
+</li>
+<li>
+<p>
+<code>Alt+Escape</code>
+</p>
+<p>Focus to next window (down in zorder)</p>
+</li>
+<li>
+<p>
+<code>Alt+Shift+Escape</code>
+</p>
+<p>Focus to previous window (up in zorder)</p>
+</li>
+<li>
+<p>
+<code>Alt+Tab</code>
+</p>
+<p>Switch between windows (top -&gt; bottom).</p>
+</li>
+<li>
+<p>
+<code>Alt+Shift+Tab</code>
+</p>
+<p>Switch between windows (bottom &lt;- top).</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+LeftArrow</code>
+</p>
+<p>Switch to the previous workspace (cycle).</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+RightArrow</code>
+</p>
+<p>Switch to the next workspace (cycle).</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+DownArrow</code>
+</p>
+<p>Switch to the previously active workspace.</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+Shift+LeftArrow</code>
+</p>
+<p>Move the focused window to the previous workspace and activate it.</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+Shift+RightArrow</code>
+</p>
+<p>Move the focused window to the next workspace and activate it.</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+Shift+DownArrow</code>
+</p>
+<p>Move the focused window to the previously active workspace and
+activate it.</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+Delete</code>
+</p>
+<p>displays the session dialog.</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+Space</code>
+</p>
+<p>Activate the AddressBar. This is a command line in the taskbar where a
+shell command can be typed. Pressing the Enter key will execute the
+command. If <strong>AddressBarCommand</strong> was configured it will be used to
+execute the command otherwise <code>/bin/sh</code> is used. If the <strong>Control</strong>
+key was also pressed then the command is executed in a terminal
+as given by <strong>TerminalCommand</strong>. The address bar maintains a history
+which is navigable by the Up and Down keys. A rich set of editing
+operations is supported, including cut-/copy-/paste-operations and
+file completion using <strong>Tab</strong> or <strong>Ctrl-I</strong>.</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+d</code>
+</p>
+<p>Show the desktop.</p>
+</li>
+<li>
+<p>
+<code>Ctrl+Alt+h</code>
+</p>
+<p>Toggle taskbar visibility.</p>
+</li>
+</ul>
+<hr>
+<h2><a name="the-resource-path"></a>The Resource Path</h2>
+<p>IceWM looks in several locations for configuration information,
+themes and customization; together these locations are called the
+resource path. The resource path contains the following directories:</p>
+<p>$ICEWM_PRIVCFG; $XDG_CONFIG_HOME/icewm; $HOME/.icewm
+The first of these which is defined and existent is used to search
+for the user&#8217;s personal customization.</p>
+<p>/etc/icewm
+the system-wide defaults directory</p>
+<p>/usr/share/icewm OR /usr/local/share/icewm
+the compiled-in default directory with default files</p>
+<p>The directories are searched in the above order, so any file located
+in the system/install directory can be overridden by the user by
+creating the same directory hierarchy under <code>$HOME/.icewm</code>.</p>
+<p>To customize icewm yourself, you could create the <code>$HOME/.icewm</code>
+directory and copy the files that you wish to modify, like
+<code>preferences</code>, <code>keys</code> or <code>winoptions</code>, from <code>/etc/icewm</code>,
+<code>/usr/share/icewm</code> or <code>/usr/local/share/icewm</code> and then modify as
+you like.</p>
+<p>To customize the default themes, create the <code>$HOME/.icewm/themes</code>
+directory and copy all the theme files there and then modify as
+necessary. Each theme has its own subdirectory. Themes can be
+downloaded from <a href="https://themes.ice-wm.org">https://themes.ice-wm.org</a>.</p>
+<hr>
+<h2><a name="configuration-files"></a>Configuration Files</h2>
+<p>IceWM uses the following configuration files:</p>
+<ul>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-theme">theme</a></strong>
+</p>
+<p>Currently selected theme</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-preferences">preferences</a></strong>
+</p>
+<p>General settings - paths, colors, fonts&#8230;</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-prefoverride">prefoverride</a></strong>
+</p>
+<p>Settings that should override the themes.</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-menu">menu</a></strong>
+</p>
+<p>Menu of startable applications. Usually customized by the user.</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-programs">programs</a></strong>
+</p>
+<p>Automatically generated menu of startable applications (this should
+be used for <strong>wmconfig</strong>, <strong>menu</strong> or similar packages, perhaps as a part
+of the login or X startup sequence).</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-winoptions">winoptions</a></strong>
+</p>
+<p>Application window options</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-keys">keys</a></strong>
+</p>
+<p>Global keybindings to launch applications (not window manager related)</p>
+</li>
+<li>
+<p>
+<strong><a href="https://ice-wm.org/man/icewm-toolbar">toolbar</a></strong>
+</p>
+<p>Quick launch application icons on the taskbar.</p>
+</li>
+</ul>
+<hr>
+<h2><a name="theme"></a>Theme</h2>
+<p>The <code>theme</code> file contains the currently selected theme. It will be
+overwritten automatically when a theme is selected from the Themes
+menu.</p>
+<hr>
+<h2><a name="preferences"></a>Preferences</h2>
+<p>This section shows preferences that can be set in <code>preferences</code>. Themes
+will not be able to override these settings. Default values are shown
+following the equal sign.</p>
+<h3><a name="focus-and-behavior"></a>Focus and Behavior</h3>
+<p>The following settings can be set to value 1 (enabled) or value 0
+(disabled).</p>
+<ul>
+<li>
+<p>
+<code>ClickToFocus = 1</code>
+</p>
+<p>Enables click to focus mode.</p>
+</li>
+<li>
+<p>
+<code>RaiseOnFocus = 1</code>
+</p>
+<p>Window is raised when focused.</p>
+</li>
+<li>
+<p>
+<code>FocusOnClickClient = 1</code>
+</p>
+<p>Window is focused when client area is clicked.</p>
+</li>
+<li>
+<p>
+<code>RaiseOnClickClient = 1</code>
+</p>
+<p>Window is raised when client area is clicked.</p>
+</li>
+<li>
+<p>
+<code>RaiseOnClickTitleBar = 1</code>
+</p>
+<p>Window is raised when titlebar is clicked.</p>
+</li>
+<li>
+<p>
+<code>RaiseOnClickButton = 1</code>
+</p>
+<p>Window is raised when title bar button is clicked.</p>
+</li>
+<li>
+<p>
+<code>RaiseOnClickFrame = 1</code>
+</p>
+<p>Window is raised when frame is clicked.</p>
+</li>
+<li>
+<p>
+<code>LowerOnClickWhenRaised = 0</code>
+</p>
+<p>Lower the active window when clicked again.</p>
+</li>
+<li>
+<p>
+<code>PassFirstClickToClient = 1</code>
+</p>
+<p>The click which raises the window is also passed to the client.</p>
+</li>
+<li>
+<p>
+<code>FocusChangesWorkspace = 0</code>
+</p>
+<p>Change to the workspace of newly focused windows.</p>
+</li>
+<li>
+<p>
+<code>AutoRaise = 0</code>
+</p>
+<p>Windows will raise automatically after AutoRaiseDelay when focused.</p>
+</li>
+<li>
+<p>
+<code>StrongPointerFocus = 0</code>
+</p>
+<p>When focus follows mouse always give the focus to the window under
+mouse pointer - Even when no mouse motion has occurred. Using this
+is not recommended. Please prefer to use just ClickToFocus=0.</p>
+</li>
+<li>
+<p>
+<code>FocusOnMap = 1</code>
+</p>
+<p>Window is focused after being mapped.</p>
+</li>
+<li>
+<p>
+<code>FocusOnMapTransient = 1</code>
+</p>
+<p>Transient window is focused after being mapped.</p>
+</li>
+<li>
+<p>
+<code>FocusOnMapTransientActive = 1</code>
+</p>
+<p>Focus dialog window when initially mapped only if parent frame focused.</p>
+</li>
+<li>
+<p>
+<code>FocusOnAppRaise = 1</code>
+</p>
+<p>The window is focused when application raises it.</p>
+</li>
+<li>
+<p>
+<code>RequestFocusOnAppRaise = 1</code>
+</p>
+<p>Request focus (flashing in taskbar) when application requests raise.</p>
+</li>
+<li>
+<p>
+<code>MapInactiveOnTop = 1</code>
+</p>
+<p>Put new windows on top even if not focusing them.</p>
+</li>
+<li>
+<p>
+<code>PointerColormap = 0</code>
+</p>
+<p>Colormap focus follows pointer.</p>
+</li>
+<li>
+<p>
+<code>DontRotateMenuPointer = 1</code>
+</p>
+<p>Don&#8217;t rotate the cursor for popup menus.</p>
+</li>
+<li>
+<p>
+<code>LimitSize = 1</code>
+</p>
+<p>Limit size of windows to screen.</p>
+</li>
+<li>
+<p>
+<code>LimitPosition = 1</code>
+</p>
+<p>Limit position of windows to screen.</p>
+</li>
+<li>
+<p>
+<code>LimitByDockLayer = 0</code>
+</p>
+<p>Let the Dock layer limit the workspace (incompatible with GNOME Panel).</p>
+</li>
+<li>
+<p>
+<code>ConsiderHBorder = 0</code>
+</p>
+<p>Consider border frames when maximizing horizontally.</p>
+</li>
+<li>
+<p>
+<code>ConsiderVBorder = 0</code>
+</p>
+<p>Consider border frames when maximizing vertically.</p>
+</li>
+<li>
+<p>
+<code>ConsiderSizeHintsMaximized = 1</code>
+</p>
+<p>Consider XSizeHints if frame is maximized.</p>
+</li>
+<li>
+<p>
+<code>CenterMaximizedWindows = 0</code>
+</p>
+<p>Center maximized windows which can&#8217;t fit the screen (like terminals).</p>
+</li>
+<li>
+<p>
+<code>HideBordersMaximized = 0</code>
+</p>
+<p>Hide window borders if window is maximized.</p>
+</li>
+<li>
+<p>
+<code>HideTitleBarWhenMaximized = 0</code>
+</p>
+<p>Hide title bar when maximized.</p>
+</li>
+<li>
+<p>
+<code>CenterLarge = 0</code>
+</p>
+<p>Center large windows.</p>
+</li>
+<li>
+<p>
+<code>CenterTransientsOnOwner = 1</code>
+</p>
+<p>Center dialogs on owner window.</p>
+</li>
+<li>
+<p>
+<code>SizeMaximized = 0</code>
+</p>
+<p>Window can be resized when maximized.</p>
+</li>
+<li>
+<p>
+<code>MinimizeToDesktop = 0</code>
+</p>
+<p>Window is minimized to desktop area (in addition to the taskbar).</p>
+</li>
+<li>
+<p>
+<code>MiniIconsPlaceHorizontal = 0</code>
+</p>
+<p>Place the mini-icons horizontal instead of vertical.</p>
+</li>
+<li>
+<p>
+<code>MiniIconsRightToLeft = 0</code>
+</p>
+<p>Place new mini-icons from right to left.</p>
+</li>
+<li>
+<p>
+<code>MiniIconsBottomToTop = 0</code>
+</p>
+<p>Place new mini-icons from bottom to top.</p>
+</li>
+<li>
+<p>
+<code>GrabRootWindow = 1</code>
+</p>
+<p>Manage root window (EXPERIMENTAL - normally enabled!).</p>
+</li>
+<li>
+<p>
+<code>ShowMoveSizeStatus = 1</code>
+</p>
+<p>Move/resize status window is visible when moving/resizing the window.</p>
+</li>
+<li>
+<p>
+<code>ShowWorkspaceStatus = 1</code>
+</p>
+<p>Show name of current workspace while switching.</p>
+</li>
+<li>
+<p>
+<code>ShowWorkspaceStatusAfterSwitch = 1</code>
+</p>
+<p>Show name of current workspace while switching workspaces.</p>
+</li>
+<li>
+<p>
+<code>ShowWorkspaceStatusAfterActivation = 1</code>
+</p>
+<p>Show name of current workspace after explicit activation.</p>
+</li>
+<li>
+<p>
+<code>WarpPointer = 0</code>
+</p>
+<p>Pointer is moved in pointer focus move when focus is moved using
+the keyboard.</p>
+</li>
+<li>
+<p>
+<code>OpaqueMove = 1</code>
+</p>
+<p>Window is immediately moved when dragged, no outline is shown.</p>
+</li>
+<li>
+<p>
+<code>OpaqueResize = 0</code>
+</p>
+<p>Window is immediately resized when dragged, no outline is shown.</p>
+</li>
+<li>
+<p>
+<code>DelayPointerFocus = 1</code>
+</p>
+<p>Similar to delayed auto raise.</p>
+</li>
+<li>
+<p>
+<code>Win95Keys = 0</code>
+</p>
+<p>Makes 3 additional keys perform sensible functions. The keys must
+be mapped to MetaL, MetaR and Menu. The left one will activate the
+start menu and the right one will display the window list.</p>
+</li>
+<li>
+<p>
+<code>ModSuperIsCtrlAlt = 1</code>
+</p>
+<p>Treat Super/Win modifier as Ctrl+Alt.</p>
+</li>
+<li>
+<p>
+<code>UseMouseWheel = 0</code>
+</p>
+<p>mouse wheel support</p>
+</li>
+<li>
+<p>
+<code>ShowPopupsAbovePointer = 0</code>
+</p>
+<p>Show popup menus above mouse pointer.</p>
+</li>
+<li>
+<p>
+<code>ReplayMenuCancelClick = 0</code>
+</p>
+<p>Send the clicks outside menus to target window.</p>
+</li>
+<li>
+<p>
+<code>ManualPlacement = 0</code>
+</p>
+<p>Windows must be placed manually by the user.</p>
+</li>
+<li>
+<p>
+<code>SmartPlacement = 1</code>
+</p>
+<p>Smart window placement (minimal overlap).</p>
+</li>
+<li>
+<p>
+<code>IgnoreNoFocusHint = 0</code>
+</p>
+<p>Ignore no-accept-focus hint set by some windows.</p>
+</li>
+<li>
+<p>
+<code>MenuMouseTracking = 0</code>
+</p>
+<p>If enabled, menus will track the mouse even when no mouse button
+is pressed.</p>
+</li>
+<li>
+<p>
+<code>ClientWindowMouseActions = 1</code>
+</p>
+<p>Allow mouse actions on client windows.</p>
+</li>
+<li>
+<p>
+<code>SnapMove = 1</code>
+</p>
+<p>Snap to nearest screen edge/window when moving windows.</p>
+</li>
+<li>
+<p>
+<code>SnapDistance = 8</code>
+</p>
+<p>Distance in pixels before windows snap together</p>
+</li>
+<li>
+<p>
+<code>ArrangeWindowsOnScreenSizeChange = 1</code>
+</p>
+<p>Automatically arrange windows when screen size changes.</p>
+</li>
+<li>
+<p>
+<code>MsgBoxDefaultAction = 0</code>
+</p>
+<p>Preselect to Cancel (0) or the OK (1) button in message boxes</p>
+</li>
+<li>
+<p>
+<code>EdgeResistance = 32</code>
+</p>
+<p>Resistance to move window with mouse outside screen limits. Setting
+it to 10000 makes the resistance infinite.</p>
+</li>
+<li>
+<p>
+<code>AllowFullscreen = 1</code>
+</p>
+<p>Allow to switch a window to fullscreen.</p>
+</li>
+<li>
+<p>
+<code>FullscreenUseAllMonitors = 0</code>
+</p>
+<p>Span over all available screens if window goes into fullscreen.</p>
+</li>
+<li>
+<p>
+<code>NetWorkAreaBehaviour = 0</code>
+</p>
+<p>NET_WORKAREA behaviour: 0 (single/multimonitor with STRUT information,
+like metacity), 1 (always full desktop), 2 (singlemonitor with STRUT,
+multimonitor without STRUT).</p>
+</li>
+<li>
+<p>
+<code>ConfirmLogout = 1</code>
+</p>
+<p>Confirm Logout.</p>
+</li>
+<li>
+<p>
+<code>MultiByte = 1</code>
+</p>
+<p>Overrides automatic multiple byte detection.</p>
+</li>
+<li>
+<p>
+<code>ShapesProtectClientWindow = 1</code>
+</p>
+<p>Don&#8217;t cut client windows by shapes set trough frame corner pixmap.</p>
+</li>
+<li>
+<p>
+<code>DoubleBuffer = 1</code>
+</p>
+<p>Use double buffering when redrawing the display.</p>
+</li>
+<li>
+<p>
+<code>XRRDisable = 0</code>
+</p>
+<p>Disable use of new XRANDR API for dual head (nvidia workaround)</p>
+</li>
+<li>
+<p>
+<code>PreferFreetypeFonts = 1</code>
+</p>
+<p>Favor *Xft fonts over core X11 fonts where possible.</p>
+</li>
+<li>
+<p>
+<code>IconPath =
+/usr/share/icons/hicolor:/usr/share/icons:/usr/share/pixmaps</code>
+</p>
+<p>Icon search path (colon separated)</p>
+</li>
+<li>
+<p>
+<code>MailCommand = xterm -name mutt -e mutt</code>
+</p>
+<p>Command to run on mailbox.</p>
+</li>
+<li>
+<p>
+<code>MailClassHint = mutt.XTerm</code>
+</p>
+<p>WM_CLASS to allow runonce for MailCommand.</p>
+</li>
+<li>
+<p>
+<code>LockCommand =</code>
+Command to lock display/screensaver.
+</p>
+</li>
+<li>
+<p>
+<code>ClockCommand = xclock -name icewm -title Clock</code>
+</p>
+<p>Command to run on clock.</p>
+</li>
+<li>
+<p>
+<code>ClockClassHint = icewm.XClock</code>
+</p>
+<p>WM_CLASS to allow runonce for ClockCommand.</p>
+</li>
+<li>
+<p>
+<code>RunCommand =</code>
+Command to select and run a program.
+</p>
+</li>
+<li>
+<p>
+<code>OpenCommand =</code>
+Command to run to open a file.
+</p>
+</li>
+<li>
+<p>
+<code>TerminalCommand = xterm</code>
+</p>
+</li>
+</ul>
+<p>Terminal emulator must accept -e option.</p>
+<ul>
+<li>
+<p>
+<code>LogoutCommand =</code>
+Command to start logout.
+</p>
+</li>
+<li>
+<p>
+<code>LogoutCancelCommand =</code>
+Command to cancel logout.
+</p>
+</li>
+<li>
+<p>
+<code>ShutdownCommand =</code>
+Command to shutdown the system.
+</p>
+</li>
+<li>
+<p>
+<code>RebootCommand =</code>
+Command to reboot the system.
+</p>
+</li>
+<li>
+<p>
+<code>SuspendCommand =</code>
+Command to send the system to standby mode.
+</p>
+</li>
+<li>
+<p>
+<code>CPUStatusCommand =</code>
+Command to run on CPU status.
+</p>
+</li>
+<li>
+<p>
+<code>CPUStatusClassHint = top.XTerm</code>
+</p>
+<p>WM_CLASS to allow runonce for CPUStatusCommand.</p>
+</li>
+<li>
+<p>
+<code>CPUStatusCombine = 1</code>
+</p>
+<p>Combine all CPUs to one.</p>
+</li>
+<li>
+<p>
+<code>NetStatusCommand =</code>
+Command to run on Net status.
+</p>
+</li>
+<li>
+<p>
+<code>NetStatusClassHint = netstat.XTerm</code>
+</p>
+<p>WM_CLASS to allow runonce for NetStatusCommand.</p>
+</li>
+<li>
+<p>
+<code>AddressBarCommand =</code>
+Command to run for address bar entries.
+</p>
+</li>
+<li>
+<p>
+<code>XRRPrimaryScreenName =</code>
+screen/output name of the primary screen.
+</p>
+</li>
+</ul>
+<h3><a name="quick-switch-list"></a>Quick Switch List</h3>
+<ul>
+<li>
+<p>
+<code>QuickSwitch = 1</code>
+</p>
+<p>enable Alt+Tab window switcher.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchToMinimized = 1</code>
+</p>
+<p>Alt+Tab switches to minimized windows too.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchToHidden = 1</code>
+</p>
+<p>Alt+Tab to hidden windows.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchToUrgent = 1</code>
+</p>
+<p>Prioritize Alt+Tab to urgent windows.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchToAllWorkspaces = 1</code>
+</p>
+<p>Alt+Tab switches to windows on any workspace.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchGroupWorkspaces = 1</code>
+</p>
+<p>Alt+Tab: group windows on current workspace.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchAllIcons = 1</code>
+</p>
+<p>Show all reachable icons when quick switching.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchTextFirst = 0</code>
+</p>
+<p>Show the window title above (all reachable) icons.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchSmallWindow = 0</code>
+</p>
+<p>Attempt to create a small QuickSwitch window (1/3 instead of 3/5 of</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchMaxWidth = 0</code>
+</p>
+<p>Go through all window titles and choose width of the longest one.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchVertical = 1</code>
+</p>
+<p>Place the icons and titles vertical instead of horizontal.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchHugeIcon = 0</code>
+</p>
+<p>Show the huge (48x48) of the window icon for the active window.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchFillSelection = 0</code>
+</p>
+<p>Fill the rectangle highlighting the current icon.</p>
+</li>
+</ul>
+<h3><a name="edge-workspace-switching"></a>Edge Workspace Switching</h3>
+<ul>
+<li>
+<p>
+<code>EdgeSwitch = 0</code>
+</p>
+<p>Workspace switches by moving mouse to left/right screen edge.</p>
+</li>
+<li>
+<p>
+<code>HorizontalEdgeSwitch = 0</code>
+</p>
+<p>Workspace switches by moving mouse to left/right screen edge.</p>
+</li>
+<li>
+<p>
+<code>VerticalEdgeSwitch = 0</code>
+</p>
+<p>Workspace switches by moving mouse to top/bottom screen edge.</p>
+</li>
+<li>
+<p>
+<code>ContinuousEdgeSwitch = 1</code>
+</p>
+<p>Workspace switches continuously when moving mouse to screen edge.</p>
+</li>
+</ul>
+<h3><a name="task-bar"></a>Task Bar</h3>
+<p>The following settings can be set to value 1 (enabled) or value 0
+(disabled).</p>
+<ul>
+<li>
+<p>
+<code>ShowTaskBar = 1</code>
+</p>
+<p>Task bar is visible.</p>
+</li>
+<li>
+<p>
+<code>TaskBarAtTop = 0</code>
+</p>
+<p>Task bar is located at top of screen.</p>
+</li>
+<li>
+<p>
+<code>TaskBarKeepBelow = 1</code>
+</p>
+<p>Keep the task bar below regular windows</p>
+</li>
+<li>
+<p>
+<code>TaskBarAutoHide = 0</code>
+</p>
+<p>Task bar will auto hide when mouse leaves it.</p>
+</li>
+<li>
+<p>
+<code>TaskBarFullscreenAutoShow = 1</code>
+</p>
+<p>Auto show task bar when fullscreen window active.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowClock = 1</code>
+</p>
+<p>Task bar clock is visible.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowAPMStatus = 0</code>
+</p>
+<p>Show battery status monitor on task bar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowAPMAuto = 1</code>
+</p>
+<p>Enable TaskBarShowAPMStatus if a battery is present.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowAPMTime = 1</code>
+</p>
+<p>Show battery status on task bar in time-format.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowAPMGraph = 1</code>
+</p>
+<p>Show battery status in graph mode.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowMailboxStatus = 1</code>
+</p>
+<p>Display status of mailbox (see <em>Mailbox</em> below).</p>
+</li>
+<li>
+<p>
+<code>TaskBarMailboxStatusBeepOnNewMail = 0</code>
+</p>
+<p>Beep when new mail arrives.</p>
+</li>
+<li>
+<p>
+<code>TaskBarMailboxStatusCountMessages = 0</code>
+</p>
+<p>Display mail message count as tooltip.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowWorkspaces = 1</code>
+</p>
+<p>Show workspace switching buttons on task bar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowWindows = 1</code>
+</p>
+<p>Show windows on the taskbar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowShowDesktopButton = 1</code>
+</p>
+<p>Show <em>show desktop</em> button on taskbar.</p>
+</li>
+<li>
+<p>
+<code>ShowEllipsis = 0</code>
+</p>
+<p>Show Ellipsis in taskbar items.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowTray = 1</code>
+</p>
+<p>Show windows in the tray.</p>
+</li>
+<li>
+<p>
+<code>TrayShowAllWindows = 1</code>
+</p>
+<p>Show windows from all workspaces on tray.</p>
+</li>
+<li>
+<p>
+<code>TaskBarEnableSystemTray = 1</code>
+</p>
+<p>Enable the system tray in the taskbar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowTransientWindows = 1</code>
+</p>
+<p>Show transient (dialogs, &#8230;) windows on task bar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowAllWindows = 0</code>
+</p>
+<p>Show windows from all workspaces on task bar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowWindowIcons = 1</code>
+</p>
+<p>Show icons of windows on the task bar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowStartMenu = 1</code>
+</p>
+<p>Show button for the start menu on the task bar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowWindowListMenu = 1</code>
+</p>
+<p>Show button for window list menu on taskbar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowCPUStatus = 1</code>
+</p>
+<p>Show CPU status on task bar (Linux &amp; Solaris).</p>
+</li>
+<li>
+<p>
+<code>CPUStatusShowRamUsage = 1</code>
+</p>
+<p>Show RAM usage in CPU status tool tip.</p>
+</li>
+<li>
+<p>
+<code>CPUStatusShowSwapUsage = 1</code>
+</p>
+<p>Show swap usage in CPU status tool tip.</p>
+</li>
+<li>
+<p>
+<code>CPUStatusShowAcpiTemp = 1</code>
+</p>
+<p>Show ACPI temperature in CPU status tool tip.</p>
+</li>
+<li>
+<p>
+<code>CPUStatusShowAcpiTempInGraph = 0</code>
+</p>
+<p>Show ACPI temperature in CPU graph.</p>
+</li>
+<li>
+<p>
+<code>AcpiIgnoreBatteries =</code>
+List of battery names ignore.
+</p>
+</li>
+<li>
+<p>
+<code>CPUStatusShowCpuFreq = 1</code>
+</p>
+<p>Show CPU frequency in CPU status tool tip.</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowMEMStatus = 1</code>
+</p>
+<p>Show memory usage status on task bar (Linux only).</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowNetStatus = 1</code>
+</p>
+<p>Show network status on task bar (Linux only).</p>
+</li>
+<li>
+<p>
+<code>NetworkStatusDevice = "[ew]*"</code>
+List of network devices to be displayed in tray, space separated. Shell
+wildcard patterns can also be used.
+</p>
+</li>
+<li>
+<p>
+<code>TaskBarShowCollapseButton = 0</code>
+</p>
+<p>Show a button to collapse the taskbar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarDoubleHeight = 0</code>
+</p>
+<p>Double height task bar</p>
+</li>
+<li>
+<p>
+<code>TaskBarWorkspacesLeft = 1</code>
+</p>
+<p>Place workspace pager on left, not right.</p>
+</li>
+<li>
+<p>
+<code>TaskBarWorkspacesTop = 0</code>
+</p>
+<p>Place workspace pager on top row when using dual-height taskbar.</p>
+</li>
+<li>
+<p>
+<code>PagerShowPreview = 1</code>
+</p>
+<p>Show a mini desktop preview on each workspace button. By pressing
+the middle mouse button the <em>window list</em> is shown. The right button
+activates the <em>window list menu</em>. By using the scroll wheel over the
+<em>workspace list</em> one can quickly cycle over all workspaces.</p>
+</li>
+<li>
+<p>
+<code>PagerShowWindowIcons = 1</code>
+</p>
+<p>Draw window icons inside large enough preview windows on pager
+(if PagerShowPreview=1).</p>
+</li>
+<li>
+<p>
+<code>PagerShowMinimized = 1</code>
+</p>
+<p>Draw even minimized windows as unfilled rectangles (if
+PagerShowPreview=1).</p>
+</li>
+<li>
+<p>
+<code>PagerShowBorders = 1</code>
+</p>
+<p>Draw border around workspace buttons (if PagerShowPreview=1).</p>
+</li>
+<li>
+<p>
+<code>PagerShowNumbers = 1</code>
+</p>
+<p>Show number of workspace on workspace button (if PagerShowPreview=1).</p>
+</li>
+<li>
+<p>
+<code>TaskBarLaunchOnSingleClick = 1</code>
+</p>
+<p>Execute taskbar applet commands (like MailCommand, ClockCommand,
+&#8230;) on single click.</p>
+</li>
+<li>
+<p>
+<code>EnableAddressBar = 1</code>
+</p>
+<p>Enable address bar functionality in taskbar.</p>
+</li>
+<li>
+<p>
+<code>ShowAddressBar = 1</code>
+</p>
+<p>Show address bar in task bar.</p>
+</li>
+<li>
+<p>
+<code>TimeFormat = "%X"</code>
+</p>
+<p>format for the taskbar clock (time) (see strftime(3) manpage).</p>
+</li>
+<li>
+<p>
+<code>TimeFormatAlt = ""</code>
+</p>
+<p>Alternate Clock Time format (e.g. for blinking effects).</p>
+</li>
+<li>
+<p>
+<code>DateFormat = "%c"</code>
+</p>
+<p>format for the taskbar clock tooltip (date+time) (see strftime(3)
+manpage).</p>
+</li>
+<li>
+<p>
+<code>TaskBarCPUSamples = 20</code>
+</p>
+<p>Width of CPU Monitor.</p>
+</li>
+<li>
+<p>
+<code>TaskBarMEMSamples = 20</code>
+</p>
+<p>Width of Memory Monitor.</p>
+</li>
+<li>
+<p>
+<code>TaskBarNetSamples = 20</code>
+</p>
+<p>Width of Net Monitor.</p>
+</li>
+<li>
+<p>
+<code>TaskbarButtonWidthDivisor = 3</code>
+</p>
+<p>Default number of tasks in taskbar.</p>
+</li>
+<li>
+<p>
+<code>TaskBarWidthPercentage = 100</code>
+</p>
+<p>Task bar width as percentage of the screen width.</p>
+</li>
+<li>
+<p>
+<code>TaskBarJustify = "left"</code>
+</p>
+<p>Taskbar justify left, right or center.</p>
+</li>
+<li>
+<p>
+<code>TaskBarApmGraphWidth = 10</code>
+</p>
+<p>Width of battery Monitor.</p>
+</li>
+<li>
+<p>
+<code>TaskBarGraphHeight = 20</code>
+</p>
+<p>Height of taskbar monitoring applets.</p>
+</li>
+<li>
+<p>
+<code>XineramaPrimaryScreen = 0</code>
+</p>
+<p>Primary screen for xinerama (taskbar, &#8230;).</p>
+</li>
+</ul>
+<h3><a name="mailbox-monitoring-updated-2018-03-04"></a>Mailbox Monitoring (updated 2018-03-04)</h3>
+<ul>
+<li>
+<p>
+<code>MailCheckDelay = 30</code>
+</p>
+<p>Delay between new-mail checks. (seconds).</p>
+</li>
+<li>
+<p>
+<code>MailBoxPath = ""</code>
+</p>
+</li>
+</ul>
+<p>This may contain a list of mailbox specifications. Mailboxes are
+separated by a space. If <code>TaskBarShowMailboxStatus</code> is enabled
+then IceWM will monitor each mailbox for status changes each
+<code>MailCheckDelay</code> seconds. For each mailbox IceWM will show an icon on
+the taskbar. The icon shows if there is mail, if there is unread mail,
+or if there is new mail. Hovering the mouse pointer over an icon shows
+the number of messages in this mailbox and also the number of unread
+mails. A mailbox can be the path to a file in conventional <em>mbox</em>
+format. If the path points to a directory then <em>Maildir</em> format is
+assumed. Remote mail boxes are specified by an URL using the Common
+Internet Scheme Syntax (RFC 1738):</p>
+<pre><code>scheme://user:password@server[:port][/path]</code></pre>
+<p>Supported schemes are <code>pop3</code>, <code>pop3s</code>, <code>imap</code>, <code>imaps</code> and <code>file</code>. The
+<code>pop3s</code> and <code>imaps</code> schemes depend on the presence of the <code>openssl</code>
+command for <code>TLS/SSL</code> encryption. This is also the case if <code>port</code> is
+either <code>993</code> for imap or <code>995</code> for pop3. When the scheme is omitted
+then <code>file</code> is assumed. IMAP subfolders can be given by the path
+component. Reserved characters like <em>slash</em>, <em>at</em> and <em>colon</em> can
+be specified using escape sequences with a hexadecimal encoding like
+<code>%2f</code> for the slash or <code>%40</code> for the at sign. For example:</p>
+<pre><code>file:///var/spool/mail/captnmark
+file:///home/captnmark/Maildir/
+pop3://markus:%2f%40%3a@maol.ch/
+pop3s://markus:password@pop.gmail.com/
+imap://mathias@localhost/INBOX.Maillisten.icewm-user
+imaps://mathias:password@imap.gmail.com/INBOX</code></pre>
+<p>To help solve network protocol errors for pop3 and imap set the
+environment variable <code>ICEWM_MAILCHECK_TRACE</code>. IceWM will then log
+communication details for POP3 and IMAP mailboxes. Just set <code>export
+ICEWM_MAILCHECK_TRACE=1</code> before executing icewm, or set this in the
+<code>env</code> configuration file.</p>
+<p>Note that for IceWM to access Gmail you must first configure your Gmail
+account to enable POP3 or IMAP access. To allow non-Gmail applications
+like IceWM to use it see the Gmail help site for "Let less secure
+apps use your account". Also set secure file permissions on your
+IceWM preferences file and the directory which contains it. It is
+unwise to store a password on file ever. Consider a wallet extension
+for IceWM. The following Perl snippet demonstrates how to hex encode
+a password like <code>!p@a%s&amp;s~</code>:</p>
+<pre><code>perl -e 'foreach(split("", $ARGV[0])) { printf "%%%02x", ord($_);  }; print "\n";' '!p@a%s&amp;s~'
+%21%40%23%24%25%5e%26%2a%7e</code></pre>
+<ul>
+<li>
+<p>
+<code>NewMailCommand =</code>
+</p>
+<p>The command to be run when new mail arrives. It is executed by
+<code>/bin/sh -c</code>.
+The following environment variables will be set:</p>
+<ul>
+<li>
+<p>
+<code>ICEWM_MAILBOX</code> mailbox index number of <code>MailBoxPath</code> starting
+ from 1.
+</p>
+</li>
+<li>
+<p>
+<code>ICEWM_COUNT</code> gives the total number of messages in this mailbox.
+</p>
+</li>
+<li>
+<p>
+<code>ICEWM_UNREAD</code> gives the number of unread messages in this mailbox.
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3><a name="menus"></a>Menus</h3>
+<ul>
+<li>
+<p>
+<code>AutoReloadMenus = 1</code>
+</p>
+<p>Reload menu files automatically if set to 1.</p>
+</li>
+<li>
+<p>
+<code>ShowProgramsMenu = 0</code>
+</p>
+<p>Show programs submenu.</p>
+</li>
+<li>
+<p>
+<code>ShowSettingsMenu = 1</code>
+</p>
+<p>Show settings submenu.</p>
+</li>
+<li>
+<p>
+<code>ShowFocusModeMenu = 1</code>
+</p>
+<p>Show focus mode submenu.</p>
+</li>
+<li>
+<p>
+<code>ShowThemesMenu = 1</code>
+</p>
+<p>Show themes submenu.</p>
+</li>
+<li>
+<p>
+<code>ShowLogoutMenu = 1</code>
+</p>
+<p>Show logout menu.</p>
+</li>
+<li>
+<p>
+<code>ShowHelp = 1</code>
+</p>
+<p>Show the help menu item.</p>
+</li>
+<li>
+<p>
+<code>ShowLogoutSubMenu = 1</code>
+</p>
+<p>Show logout submenu.</p>
+</li>
+<li>
+<p>
+<code>ShowAbout = 1</code>
+</p>
+<p>Show the about menu item.</p>
+</li>
+<li>
+<p>
+<code>ShowRun = 1</code>
+</p>
+<p>Show the run menu item.</p>
+</li>
+<li>
+<p>
+<code>ShowWindowList = 1</code>
+</p>
+<p>Show the window menu item.</p>
+</li>
+<li>
+<p>
+<code>MenuMaximalWidth = 0</code>
+</p>
+<p>Maximal width of popup menus, 2/3 of the screen&#8217;s width if set to zero.</p>
+</li>
+<li>
+<p>
+<code>NestedThemeMenuMinNumber = 25</code>
+</p>
+<p>Minimal number of themes after which the Themes menu becomes nested
+(0=disabled).</p>
+</li>
+</ul>
+<h3><a name="timings"></a>Timings</h3>
+<ul>
+<li>
+<p>
+<code>DelayFuzziness = 10</code>
+</p>
+<p>Percentage of delay/timeout fuzziness to allow for merging of timer
+timeouts.</p>
+</li>
+<li>
+<p>
+<code>ClickMotionDistance = 5</code>
+</p>
+<p>Movement before click is interpreted as drag.</p>
+</li>
+<li>
+<p>
+<code>ClickMotionDelay = 200</code>
+</p>
+<p>Delay before click gets interpreted as drag.</p>
+</li>
+<li>
+<p>
+<code>MultiClickTime = 400</code>
+</p>
+<p>Time (ms) to recognize for double click.</p>
+</li>
+<li>
+<p>
+<code>MenuActivateDelay = 40</code>
+</p>
+<p>Delay before activating menu items.</p>
+</li>
+<li>
+<p>
+<code>SubmenuMenuActivateDelay = 300</code>
+</p>
+<p>Delay before activating menu submenus.</p>
+</li>
+<li>
+<p>
+<code>ToolTipDelay = 5000</code>
+</p>
+<p>Time before showing the tooltip.</p>
+</li>
+<li>
+<p>
+<code>ToolTipTime = 60000</code>
+</p>
+<p>Time before tooltip window is hidden (0 means never).</p>
+</li>
+<li>
+<p>
+<code>AutoHideDelay = 300</code>
+</p>
+<p>Time to auto hide taskbar (must enable first with TaskBarAutoHide).</p>
+</li>
+<li>
+<p>
+<code>AutoShowDelay = 500</code>
+</p>
+<p>Delay before task bar is shown.</p>
+</li>
+<li>
+<p>
+<code>AutoRaiseDelay = 400</code>
+</p>
+<p>Time to auto raise (must enable first with AutoRaise).</p>
+</li>
+<li>
+<p>
+<code>PointerFocusDelay = 200</code>
+</p>
+<p>Delay for pointer focus switching.</p>
+</li>
+<li>
+<p>
+<code>EdgeSwitchDelay = 600</code>
+</p>
+<p>Screen edge workspace switching delay.</p>
+</li>
+<li>
+<p>
+<code>ScrollBarStartDelay = 500</code>
+</p>
+<p>Initial scroll bar autoscroll delay</p>
+</li>
+<li>
+<p>
+<code>ScrollBarDelay = 30</code>
+</p>
+<p>Scroll bar autoscroll delay</p>
+</li>
+<li>
+<p>
+<code>AutoScrollStartDelay = 500</code>
+</p>
+<p>Auto scroll start delay</p>
+</li>
+<li>
+<p>
+<code>AutoScrollDelay = 60</code>
+</p>
+<p>Auto scroll delay</p>
+</li>
+<li>
+<p>
+<code>WorkspaceStatusTime = 2500</code>
+</p>
+<p>Time before workspace status window is hidden.</p>
+</li>
+<li>
+<p>
+<code>TaskBarCPUDelay = 500</code>
+</p>
+<p>Delay between CPU Monitor samples in ms.</p>
+</li>
+<li>
+<p>
+<code>TaskBarMEMDelay = 500</code>
+</p>
+<p>Delay between Memory Monitor samples in ms.</p>
+</li>
+<li>
+<p>
+<code>TaskBarNetDelay = 500</code>
+</p>
+<p>Delay between Net Monitor samples in ms.</p>
+</li>
+<li>
+<p>
+<code>FocusRequestFlashTime = 0</code>
+</p>
+<p>Number of seconds the taskbar app will blink when requesting focus
+(0 = forever).</p>
+</li>
+<li>
+<p>
+<code>FocusRequestFlashInterval = 250</code>
+</p>
+<p>Taskbar blink interval (ms) when requesting focus (0 = blinking
+disabled).</p>
+</li>
+<li>
+<p>
+<code>BatteryPollingPeriod = 10</code>
+</p>
+<p>Delay between power status updates (seconds).</p>
+</li>
+</ul>
+<h3><a name="buttons-and-keys"></a>Buttons and Keys</h3>
+<ul>
+<li>
+<p>
+<code>UseRootButtons = 255</code>
+</p>
+<p>Bitmask of root window button click to use in window manager.</p>
+</li>
+<li>
+<p>
+<code>ButtonRaiseMask = 1</code>
+</p>
+<p>Bitmask of buttons that raise the window when pressed.</p>
+</li>
+<li>
+<p>
+<code>DesktopWinMenuButton = 0</code>
+</p>
+<p>Desktop mouse-button click to show the window list menu.</p>
+</li>
+<li>
+<p>
+<code>DesktopWinListButton = 2</code>
+</p>
+<p>Desktop mouse-button click to show the window list.</p>
+</li>
+<li>
+<p>
+<code>DesktopMenuButton = 3</code>
+</p>
+<p>Desktop mouse-button click to show the root menu.</p>
+</li>
+<li>
+<p>
+<code>TitleBarMaximizeButton = 1</code>
+</p>
+<p>TitleBar mouse-button double click to maximize the window.</p>
+</li>
+<li>
+<p>
+<code>TitleBarRollupButton = 2</code>
+</p>
+<p>TitleBar mouse-button double click to rollup the window.</p>
+</li>
+<li>
+<p>
+<code>RolloverButtonsSupported = 0</code>
+</p>
+<p>Does it support the <em>O</em> title bar button images (for mouse rollover)</p>
+</li>
+</ul>
+<h3><a name="workspaces"></a>Workspaces</h3>
+<ul>
+<li>
+<p>
+WorkspaceNames
+</p>
+<p>List of workspace names, for example:</p>
+<p>WorkspaceNames=" 1 ", " 2 ", " 3 ", " 4 "</p>
+</li>
+</ul>
+<h3><a name="paths"></a>Paths</h3>
+<ul>
+<li>
+<p>
+LibPath
+</p>
+<p>Path to the icewm/lib directory.</p>
+</li>
+<li>
+<p>
+IconPath
+</p>
+<p>Path to the icon directory. Multiple paths can be given using the
+colon as a separator.</p>
+</li>
+</ul>
+<h3><a name="programs"></a>Programs</h3>
+<ul>
+<li>
+<p>
+ClockCommand
+</p>
+<p>program to run when the clock is double clicked.</p>
+</li>
+<li>
+<p>
+MailCommand
+</p>
+<p>program to run when mailbox icon is double clicked.</p>
+</li>
+<li>
+<p>
+LockCommand
+</p>
+<p>program to run to lock the screen.</p>
+</li>
+<li>
+<p>
+RunCommand
+</p>
+<p>program to run when <strong>Run</strong> is selected from the start menu.</p>
+</li>
+</ul>
+<h3><a name="window-menus"></a>Window Menus</h3>
+<p>WinMenuItems
+Items to show in the window menus, possible values are:</p>
+<ul>
+<li>
+<p>
+<code>a=rAise</code>
+</p>
+</li>
+<li>
+<p>
+<code>c=Close</code>
+</p>
+</li>
+<li>
+<p>
+<code>f=Fullscreen</code>
+</p>
+</li>
+<li>
+<p>
+<code>h=Hide</code>
+</p>
+</li>
+<li>
+<p>
+<code>i=trayIcon</code>
+</p>
+</li>
+<li>
+<p>
+<code>k=Kill</code>
+</p>
+</li>
+<li>
+<p>
+<code>l=Lower</code>
+</p>
+</li>
+<li>
+<p>
+<code>m=Move</code>
+</p>
+</li>
+<li>
+<p>
+<code>n=miNimize</code>
+</p>
+</li>
+<li>
+<p>
+<code>r=Restore</code>
+</p>
+</li>
+<li>
+<p>
+<code>s=Size</code>
+</p>
+</li>
+<li>
+<p>
+<code>t=moveTo</code>
+</p>
+</li>
+<li>
+<p>
+<code>u=rollUp</code>
+</p>
+</li>
+<li>
+<p>
+<code>w=WindowsList</code>
+</p>
+</li>
+<li>
+<p>
+<code>x=maXimize</code>
+</p>
+</li>
+<li>
+<p>
+<code>y=laYer</code>
+</p>
+<p>Examples:</p>
+<p>WinMenuItems=rmsnxfhualyticw   #Default menu
+  WinMenuItems=rmsnxfhualytickw  #Menu with all possible options
+  WinMenuItems=rmsnxc            #MS-Windows menu</p>
+</li>
+</ul>
+<hr>
+<h2><a name="theme-settings"></a>Theme Settings</h2>
+<p>This section shows settings that can be set in theme files. They can
+also be set in <code>preferences</code> file but themes will override the values
+set there. To override the theme values the settings should be set in
+<code>prefoverride</code> file. Default values are shown following the equal sign.</p>
+<ul>
+<li>
+<p>
+<code>ThemeAuthor =</code>
+</p>
+<p>Theme author, e-mail address, credits.</p>
+</li>
+<li>
+<p>
+<code>ThemeDescription =</code>
+</p>
+<p>Description of the theme, credits.</p>
+</li>
+<li>
+<p>
+<code>Gradients =</code>
+</p>
+<p>List of gradient pixmaps in the current theme.</p>
+</li>
+</ul>
+<h3><a name="borders"></a>Borders</h3>
+<p>The following settings can be set to a numeric value.</p>
+<ul>
+<li>
+<p>
+<code>BorderSizeX = 6</code>
+</p>
+<p>Left/right border width.</p>
+</li>
+<li>
+<p>
+<code>BorderSizeY = 6</code>
+</p>
+<p>Top/bottom border height.</p>
+</li>
+<li>
+<p>
+<code>DlgBorderSizeX = 2</code>
+</p>
+<p>Left/right border width of non-resizable windows.</p>
+</li>
+<li>
+<p>
+<code>DlgBorderSizeY = 2</code>
+</p>
+<p>Top/bottom border height of non-resizable windows.</p>
+</li>
+<li>
+<p>
+<code>CornerSizeX = 24</code>
+</p>
+<p>Width of the window corner.</p>
+</li>
+<li>
+<p>
+<code>CornerSizeY = 24</code>
+</p>
+<p>Height of the window corner.</p>
+</li>
+<li>
+<p>
+<code>TitleBarHeight = 20</code>
+</p>
+<p>Height of the title bar.</p>
+</li>
+<li>
+<p>
+<code>TitleBarJustify = 0</code>
+</p>
+<p>Justification of the window title.</p>
+</li>
+<li>
+<p>
+<code>TitleBarHorzOffset = 0</code>
+</p>
+<p>Horizontal offset for the window title text.</p>
+</li>
+<li>
+<p>
+<code>TitleBarVertOffset = 0</code>
+</p>
+<p>Vertical offset for the window title text.</p>
+</li>
+<li>
+<p>
+<code>TitleBarCentered = 0</code>
+</p>
+<p>Draw window title centered (obsoleted by TitleBarJustify)</p>
+</li>
+<li>
+<p>
+<code>TitleBarJoinLeft = 0</code>
+</p>
+<p>Join title*S and title*T</p>
+</li>
+<li>
+<p>
+<code>TitleBarJoinRight = 0</code>
+</p>
+<p>Join title*T and title*B</p>
+</li>
+<li>
+<p>
+<code>ScrollBarX = 16</code>
+</p>
+<p>Scrollbar width.</p>
+</li>
+<li>
+<p>
+<code>ScrollBarY = 16</code>
+</p>
+<p>Scrollbar (button) height.</p>
+</li>
+<li>
+<p>
+<code>MenuIconSize = 16</code>
+</p>
+<p>Menu icon size.</p>
+</li>
+<li>
+<p>
+<code>SmallIconSize = 16</code>
+</p>
+<p>Dimension of the small icons.</p>
+</li>
+<li>
+<p>
+<code>LargeIconSize = 32</code>
+</p>
+<p>Dimension of the large icons.</p>
+</li>
+<li>
+<p>
+<code>HugeIconSize = 48</code>
+</p>
+<p>Dimension of the large icons.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchHorzMargin = 3</code>
+</p>
+<p>Horizontal margin of the quickswitch window.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchVertMargin = 3</code>
+</p>
+<p>Vertical margin of the quickswitch window.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchIconMargin = 4</code>
+</p>
+<p>Vertical margin in the quickswitch window.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchIconBorder = 2</code>
+</p>
+<p>Distance between the active icon and it&#8217;s border.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchSeparatorSize = 6</code>
+</p>
+<p>Height of the separator between (all reachable) icons and text,
+0 to avoid it.</p>
+</li>
+<li>
+<p>
+<code>ShowMenuButtonIcon = 1</code>
+</p>
+<p>Show application icon over menu button.</p>
+</li>
+<li>
+<p>
+<code>TitleButtonsLeft = "s"</code>
+</p>
+<p>Titlebar buttons from left to right (x=close, m=max, i=min, h=hide,
+r=rollup, s=sysmenu, d=depth).</p>
+</li>
+<li>
+<p>
+<code>TitleButtonsRight = "xmir"</code>
+</p>
+<p>Titlebar buttons from right to left (x=close, m=max, i=min, h=hide,
+r=rollup, s=sysmenu, d=depth).</p>
+</li>
+<li>
+<p>
+<code>TitleButtonsSupported = "xmis"</code>
+</p>
+<p>Titlebar buttons supported by theme (x,m,i,r,h,s,d).</p>
+</li>
+</ul>
+<h3><a name="fonts"></a>Fonts</h3>
+<p>The following settings can be set to a string value.</p>
+<ul>
+<li>
+<p>
+<code>TitleFontName = "-*-sans-medium-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the title bar font.</p>
+</li>
+<li>
+<p>
+<code>MenuFontName = "-*-sans-bold-r-*-*-*-100-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the menu font.</p>
+</li>
+<li>
+<p>
+<code>StatusFontName = "-*-monospace-bold-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the status display font.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchFontName = "-*-monospace-bold-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the font for Alt+Tab switcher window.</p>
+</li>
+<li>
+<p>
+<code>NormalButtonFontName = "-*-sans-medium-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the normal button font.</p>
+</li>
+<li>
+<p>
+<code>ActiveButtonFontName = "-*-sans-bold-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the active button font.</p>
+</li>
+<li>
+<p>
+<code>NormalTaskBarFontName = "-*-sans-medium-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the normal task bar item font.</p>
+</li>
+<li>
+<p>
+<code>ActiveTaskBarFontName = "-*-sans-bold-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the active task bar item font.</p>
+</li>
+<li>
+<p>
+<code>ToolButtonFontName = "-*-sans-medium-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the tool button font (fallback: NormalButtonFontName).</p>
+</li>
+<li>
+<p>
+<code>NormalWorkspaceFontName = "-*-sans-medium-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the normal workspace button font (fallback:
+NormalButtonFontName).</p>
+</li>
+<li>
+<p>
+<code>ActiveWorkspaceFontName = "-*-sans-medium-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the active workspace button font (fallback:
+ActiveButtonFontName).</p>
+</li>
+<li>
+<p>
+<code>MinimizedWindowFontName = "-*-sans-medium-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the mini-window font.</p>
+</li>
+<li>
+<p>
+<code>ListBoxFontName = "-*-sans-medium-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the window list font.</p>
+</li>
+<li>
+<p>
+<code>ToolTipFontName = "-*-sans-medium-r-*-*-*-120-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the tool tip font.</p>
+</li>
+<li>
+<p>
+<code>ClockFontName = "-*-monospace-medium-r-*-*-*-140-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the task bar clock font.</p>
+</li>
+<li>
+<p>
+<code>TempFontName = "-*-monospace-medium-r-*-*-*-140-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the task bar temperature font.</p>
+</li>
+<li>
+<p>
+<code>ApmFontName = "-*-monospace-medium-r-*-*-*-140-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the task bar battery font.</p>
+</li>
+<li>
+<p>
+<code>InputFontName = "-*-monospace-medium-r-*-*-*-140-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the input field font.</p>
+</li>
+<li>
+<p>
+<code>LabelFontName = "-*-sans-medium-r-*-*-*-140-*-*-*-*-*-*"</code>
+</p>
+<p>Name of the label font.</p>
+</li>
+</ul>
+<p>When IceWM is configured with <code>--enable-xfreetype</code>, only the settings
+with "Xft" suffix will be used. They specifiy the font name in
+fontconfig format:</p>
+<pre><code>MenuFontNameXft="sans-serif:size=12:bold"</code></pre>
+<ul>
+<li>
+<p>
+<code>TitleFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the title bar font.</p>
+</li>
+<li>
+<p>
+<code>MenuFontNameXft = "sans-serif:size=10:bold"</code>
+</p>
+<p>Name of the menu font.</p>
+</li>
+<li>
+<p>
+<code>StatusFontNameXft = "monospace:size=12:bold"</code>
+</p>
+<p>Name of the status display font.</p>
+</li>
+<li>
+<p>
+<code>QuickSwitchFontNameXft = "monospace:size=12:bold"</code>
+</p>
+<p>Name of the font for Alt+Tab switcher window.</p>
+</li>
+<li>
+<p>
+<code>NormalButtonFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the normal button font.</p>
+</li>
+<li>
+<p>
+<code>ActiveButtonFontNameXft = "sans-serif:size=12:bold"</code>
+</p>
+<p>Name of the active button font.</p>
+</li>
+<li>
+<p>
+<code>NormalTaskBarFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the normal task bar item font.</p>
+</li>
+<li>
+<p>
+<code>ActiveTaskBarFontNameXft = "sans-serif:size=12:bold"</code>
+</p>
+<p>Name of the active task bar item font.</p>
+</li>
+<li>
+<p>
+<code>ToolButtonFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the tool button font (fallback: NormalButtonFontNameXft).</p>
+</li>
+<li>
+<p>
+<code>NormalWorkspaceFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the normal workspace button font (fallback:
+NormalButtonFontNameXft).</p>
+</li>
+<li>
+<p>
+<code>ActiveWorkspaceFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the active workspace button font (fallback:
+ActiveButtonFontNameXft).</p>
+</li>
+<li>
+<p>
+<code>MinimizedWindowFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the mini-window font.</p>
+</li>
+<li>
+<p>
+<code>ListBoxFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the window list font.</p>
+</li>
+<li>
+<p>
+<code>ToolTipFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the tool tip font.</p>
+</li>
+<li>
+<p>
+<code>ClockFontNameXft = "monospace:size=12"</code>
+</p>
+<p>Name of the task bar clock font.</p>
+</li>
+<li>
+<p>
+<code>TempFontNameXft = "monospace:size=12"</code>
+</p>
+<p>Name of the task bar temperature font.</p>
+</li>
+<li>
+<p>
+<code>ApmFontNameXft = "monospace:size=12"</code>
+</p>
+<p>Name of the task bar battery font.</p>
+</li>
+<li>
+<p>
+<code>InputFontNameXft = "monospace:size=12"</code>
+</p>
+<p>Name of the input field font.</p>
+</li>
+<li>
+<p>
+<code>LabelFontNameXft = "sans-serif:size=12"</code>
+</p>
+<p>Name of the label font.</p>
+</li>
+</ul>
+<h3><a name="colors"></a>Colors</h3>
+<ul>
+<li>
+<p>
+<code>ColorDialog = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of dialog windows.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalBorder = "rgb:C0/C0/C0"</code>
+</p>
+<p>Border of inactive windows.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveBorder = "rgb:C0/C0/C0"</code>
+</p>
+<p>Border of active windows.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalButton = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of regular buttons.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalButtonText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of regular buttons.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveButton = "rgb:E0/E0/E0"</code>
+</p>
+<p>Background of pressed buttons.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveButtonText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of pressed buttons.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalTitleButton = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of titlebar buttons.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalTitleButtonText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of titlebar buttons.</p>
+</li>
+<li>
+<p>
+<code>ColorToolButton = ""</code>
+</p>
+<p>Background of toolbar buttons, ColorNormalButton is used if empty.</p>
+</li>
+<li>
+<p>
+<code>ColorToolButtonText = ""</code>
+</p>
+<p>Textcolor of toolbar buttons, ColorNormalButtonText is used if empty.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalWorkspaceButton = ""</code>
+</p>
+<p>Background of workspace buttons, ColorNormalButton is used if empty.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalWorkspaceButtonText = ""</code>
+</p>
+<p>Textcolor of workspace buttons, ColorNormalButtonText is used if empty.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveWorkspaceButton = ""</code>
+</p>
+<p>Background of the active workspace button, ColorActiveButton is used
+if empty.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveWorkspaceButtonText = ""</code>
+</p>
+<p>Textcolor of the active workspace button, ColorActiveButtonText is
+used if empty.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalTitleBar = "rgb:80/80/80"</code>
+</p>
+<p>Background of the titlebar of regular windows.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalTitleBarText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of the titlebar of regular windows.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalTitleBarShadow = ""</code>
+</p>
+<p>Textshadow of the titlebar of regular windows.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveTitleBar = "rgb:00/00/A0"</code>
+</p>
+<p>Background of the titlebar of active windows.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveTitleBarText = "rgb:FF/FF/FF"</code>
+</p>
+<p>Textcolor of the titlebar of active windows.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveTitleBarShadow = ""</code>
+</p>
+<p>Textshadow of the titlebar of active windows.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalMinimizedWindow = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background for mini icons of regular windows.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalMinimizedWindowText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor for mini icons of regular windows.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveMinimizedWindow = "rgb:E0/E0/E0"</code>
+</p>
+<p>Background for mini icons of active windows.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveMinimizedWindowText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor for mini icons of active windows.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalMenu = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of pop-up menus.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalMenuItemText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of regular menu items.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveMenuItem = "rgb:A0/A0/A0"</code>
+</p>
+<p>Background of selected menu item, leave empty to force transparency.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveMenuItemText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of selected menu items.</p>
+</li>
+<li>
+<p>
+<code>ColorDisabledMenuItemText = "rgb:80/80/80"</code>
+</p>
+<p>Textcolor of disabled menu items.</p>
+</li>
+<li>
+<p>
+<code>ColorDisabledMenuItemShadow = ""</code>
+</p>
+<p>Shadow of regular menu items.</p>
+</li>
+<li>
+<p>
+<code>ColorMoveSizeStatus = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of move/resize status window.</p>
+</li>
+<li>
+<p>
+<code>ColorMoveSizeStatusText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of move/resize status window.</p>
+</li>
+<li>
+<p>
+<code>ColorQuickSwitch = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of the quick switch window.</p>
+</li>
+<li>
+<p>
+<code>ColorQuickSwitchText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor in the quick switch window.</p>
+</li>
+<li>
+<p>
+<code>ColorQuickSwitchActive = ""</code>
+</p>
+<p>Rectangle arround the active icon in the quick switch window.</p>
+</li>
+<li>
+<p>
+<code>ColorDefaultTaskBar = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of the taskbar.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalTaskBarApp = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background for task buttons of regular windows.</p>
+</li>
+<li>
+<p>
+<code>ColorNormalTaskBarAppText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor for task buttons of regular windows.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveTaskBarApp = "rgb:E0/E0/E0"</code>
+</p>
+<p>Background for task buttons of the active window.</p>
+</li>
+<li>
+<p>
+<code>ColorActiveTaskBarAppText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor for task buttons of the active window.</p>
+</li>
+<li>
+<p>
+<code>ColorMinimizedTaskBarApp = "rgb:A0/A0/A0"</code>
+</p>
+<p>Background for task buttons of minimized windows.</p>
+</li>
+<li>
+<p>
+<code>ColorMinimizedTaskBarAppText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor for task buttons of minimized windows.</p>
+</li>
+<li>
+<p>
+<code>ColorInvisibleTaskBarApp = "rgb:80/80/80"</code>
+</p>
+<p>Background for task buttons of windows on other workspaces.</p>
+</li>
+<li>
+<p>
+<code>ColorInvisibleTaskBarAppText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor for task buttons of windows on other workspaces.</p>
+</li>
+<li>
+<p>
+<code>ColorScrollBar = "rgb:A0/A0/A0"</code>
+</p>
+<p>Scrollbar background (sliding area).</p>
+</li>
+<li>
+<p>
+<code>ColorScrollBarSlider = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of the slider button in scrollbars.</p>
+</li>
+<li>
+<p>
+<code>ColorScrollBarButton = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of the arrow buttons in scrollbars.</p>
+</li>
+<li>
+<p>
+<code>ColorScrollBarArrow = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of the arrow buttons in scrollbars (obsolete).</p>
+</li>
+<li>
+<p>
+<code>ColorScrollBarButtonArrow = "rgb:00/00/00"</code>
+</p>
+<p>Color of active arrows on scrollbar buttons.</p>
+</li>
+<li>
+<p>
+<code>ColorScrollBarInactiveArrow = "rgb:80/80/80"</code>
+</p>
+<p>Color of inactive arrows on scrollbar buttons.</p>
+</li>
+<li>
+<p>
+<code>ColorListBox = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of listboxes.</p>
+</li>
+<li>
+<p>
+<code>ColorListBoxText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor in listboxes.</p>
+</li>
+<li>
+<p>
+<code>ColorListBoxSelection = "rgb:80/80/80"</code>
+</p>
+<p>Background of selected listbox items.</p>
+</li>
+<li>
+<p>
+<code>ColorListBoxSelectionText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of selected listbox items.</p>
+</li>
+<li>
+<p>
+<code>ColorToolTip = "rgb:E0/E0/00"</code>
+</p>
+<p>Background of tooltips.</p>
+</li>
+<li>
+<p>
+<code>ColorToolTipText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of tooltips.</p>
+</li>
+<li>
+<p>
+<code>ColorLabel = "rgb:C0/C0/C0"</code>
+</p>
+<p>Background of labels, leave empty to force transparency.</p>
+</li>
+<li>
+<p>
+<code>ColorLabelText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of labels.</p>
+</li>
+<li>
+<p>
+<code>ColorInput = "rgb:FF/FF/FF"</code>
+</p>
+<p>Background of text entry fields (e.g. the addressbar).</p>
+</li>
+<li>
+<p>
+<code>ColorInputText = "rgb:00/00/00"</code>
+</p>
+<p>Textcolor of text entry fields (e.g. the addressbar).</p>
+</li>
+<li>
+<p>
+<code>ColorInputSelection = "rgb:80/80/80"</code>
+</p>
+<p>Background of selected text in an entry field.</p>
+</li>
+<li>
+<p>
+<code>ColorInputSelectionText = "rgb:00/00/00"</code>
+</p>
+<p>Selected text in an entry field.</p>
+</li>
+<li>
+<p>
+<code>ColorClock = "rgb:00/00/00"</code>
+</p>
+<p>Background of non-LCD clock, leave empty to force transparency.</p>
+</li>
+<li>
+<p>
+<code>ColorClockText = "rgb:00/FF/00"</code>
+</p>
+<p>Background of non-LCD monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorApm = "rgb:00/00/00"</code>
+</p>
+<p>Background of battery monitor, leave empty to force transparency.</p>
+</li>
+<li>
+<p>
+<code>ColorApmText = "rgb:00/FF/00"</code>
+</p>
+<p>Textcolor of battery monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorApmBattary = "rgb:FF/FF/00"</code>
+</p>
+<p>Color of battery monitor when discharging.</p>
+</li>
+<li>
+<p>
+<code>ColorApmLine = "rgb:00/FF/00"</code>
+</p>
+<p>Color of battery monitor when charging.</p>
+</li>
+<li>
+<p>
+<code>ColorApmGraphBg = "rgb:00/00/00"</code>
+</p>
+<p>Background color for graph mode.</p>
+</li>
+<li>
+<p>
+<code>ColorCPUStatusUser = "rgb:00/FF/00"</code>
+</p>
+<p>User load on the CPU monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorCPUStatusSystem = "rgb:FF/00/00"</code>
+</p>
+<p>System load on the CPU monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorCPUStatusInterrupts = "rgb:FF/FF/00"</code>
+</p>
+<p>Interrupts on the CPU monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorCPUStatusIoWait = "rgb:60/00/60"</code>
+</p>
+<p>IO Wait on the CPU monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorCPUStatusSoftIrq = "rgb:00/FF/FF"</code>
+</p>
+<p>Soft Interrupts on the CPU monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorCPUStatusNice = "rgb:00/00/FF"</code>
+</p>
+<p>Nice load on the CPU monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorCPUStatusIdle = "rgb:00/00/00"</code>
+</p>
+<p>Idle (non) load on the CPU monitor, leave empty to force transparency.</p>
+</li>
+<li>
+<p>
+<code>ColorCPUStatusSteal = "rgb:FF/8A/91"</code>
+</p>
+<p>Involuntary Wait on the CPU monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorCPUStatusTemp = "rgb:60/60/C0"</code>
+</p>
+<p>Temperature of the CPU.</p>
+</li>
+<li>
+<p>
+<code>ColorMEMStatusUser = "rgb:40/40/80"</code>
+</p>
+<p>User program usage in the memory monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorMEMStatusBuffers = "rgb:60/60/C0"</code>
+</p>
+<p>OS buffers usage in the memory monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorMEMStatusCached = "rgb:80/80/FF"</code>
+</p>
+<p>OS cached usage in the memory monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorMEMStatusFree = "rgb:00/00/00"</code>
+</p>
+<p>Free memory in the memory monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorNetSend = "rgb:FF/FF/00"</code>
+</p>
+<p>Outgoing load on the network monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorNetReceive = "rgb:FF/00/FF"</code>
+</p>
+<p>Incoming load on the network monitor.</p>
+</li>
+<li>
+<p>
+<code>ColorNetIdle = "rgb:00/00/00"</code>
+</p>
+<p>Idle (non) load on the network monitor, leave empty to force
+transparency.</p>
+</li>
+<li>
+<p>
+<code>ColorApmBattery = rgb:FF/FF/00</code>
+</p>
+<p>Color of battery monitor in battery mode.</p>
+</li>
+</ul>
+<h3><a name="desktop-background"></a>Desktop Background</h3>
+<p>The following options are used by <code>icewmbg</code>:</p>
+<ul>
+<li>
+<p>
+<code>DesktopBackgroundCenter = 0</code>
+</p>
+<p>Display desktop background centered and not tiled. (set to 0 or 1).</p>
+</li>
+<li>
+<p>
+<code>DesktopBackgroundScaled = 0</code>
+</p>
+<p>Resize desktop background to full screen.</p>
+</li>
+<li>
+<p>
+<code>DesktopBackgroundColor = ""</code>
+</p>
+<p>Color(s) of the desktop background.</p>
+</li>
+<li>
+<p>
+<code>DesktopBackgroundImage = ""</code>
+</p>
+<p>Image(s) for desktop background. If you want IceWM to ignore the
+desktop background image / color set both DesktopBackgroundColor and
+DesktopBackgroundImage to an empty value ("").</p>
+</li>
+<li>
+<p>
+<code>SupportSemitransparency = 1</code>
+</p>
+<p>Support for semitransparent terminals like Eterm or gnome-terminal.</p>
+</li>
+<li>
+<p>
+<code>DesktopTransparencyColor = ""</code>
+</p>
+<p>Color(s) to announce for semitransparent windows.</p>
+</li>
+<li>
+<p>
+<code>DesktopTransparencyImage = ""</code>
+</p>
+<p>Image(s) to announce for semitransparent windows.</p>
+</li>
+<li>
+<p>
+<code>DesktopBackgroundMultihead = 0</code>
+</p>
+<p>Paint the background image over all multihead monitors combined.</p>
+</li>
+</ul>
+<h3><a name="task-bar-style"></a>Task Bar Style</h3>
+<ul>
+<li>
+<p>
+<code>TaskBarClockLeds = 1</code>
+</p>
+<p>Display clock using LCD style pixmaps.</p>
+</li>
+</ul>
+<hr>
+<h2><a name="menus-and-toolbar-updated-2018-05-06"></a>Menus and Toolbar (updated 2018-05-06)</h2>
+<h3><a name="menu"></a>menu</h3>
+<p>Within the <code>menu</code> configuration file you can configure which programs
+are to appear in the root/start menu.</p>
+<p>Submenus can be created with:</p>
+<pre><code>menu "title" icon_name {
+# contained items
+}
+separator
+menufile "title" icon_name filename
+menuprog "title" icon_name program arguments
+menuprogreload "title" icon_name timeout program arguments
+include filename
+includeprog program arguments</code></pre>
+<p>Menus can be populated with submenus and with program entries as
+explained below for the <code>program</code> configuration file. Comments start
+with a #-sign.</p>
+<p>The <code>menufile</code> directive creates a submenu with a title and an
+icon, while <code>menuprog</code> and <code>menuprogreload</code> create a submenu with
+entries from the output of <code>program arguments</code> where the timeout
+of <code>menuprogreload</code> says to reload the submenu after the timeout
+expires. The <code>include</code> statement loads more configuration from the
+given filename, while <code>includeprog</code> runs <code>program arguments</code> to parse
+the output.</p>
+<h3><a name="toolbar"></a>toolbar</h3>
+<p>The <code>toolbar</code> configuration file is used to put programs as buttons
+on the taskbar. It uses the same syntax as the <code>menu</code> file.</p>
+<h3><a name="programs-2"></a>programs</h3>
+<p>Usually automatically generated menu configuration file of installed
+programs. The <code>programs</code> file should be automatically generated by
+<code>wmconfig</code> (Redhat), <code>menu</code> (Debian), or <code>icewm-menu-fdo</code>.</p>
+<p>Programs can be added using the following syntax:</p>
+<pre><code>prog "title" icon_name program_executable options</code></pre>
+<p>Restarting another window manager can be done using the restart
+program:</p>
+<pre><code>restart "title" icon_name program_executable options</code></pre>
+<p>icon_name can be <code>-</code> if icon is not wanted, or <code>!</code> if the icon name
+shall be guessed by checking the command (i.e. the real executable
+file, following symlinks as needed).</p>
+<p>The "runonce" keyword allows to launch an application only when no
+window has the WM_CLASS hint specified. Otherwise the first window
+having this class hint is mapped and raised. Syntax:</p>
+<pre><code>runonce "title" icon_name "res_name.res_class" program_executable
+options
+runonce "title" icon_name "res_name" program_executable options
+runonce "title" icon_name ".res_class" program_executable options</code></pre>
+<p>The class hint of an application window can be figured out by running</p>
+<pre><code>xprop WM_CLASS</code></pre>
+<p>Submenus can be added using the same keywords as the <code>menu</code>
+configuration file.</p>
+<p>Only double quotes are interpreted by IceWM. IceWM doesn&#8217;t run the
+shell automatically, so you may have to do that.</p>
+<hr>
+<h2><a name="hot-keys"></a>Hot Keys</h2>
+<p>IceWM allows launching of arbitrary programs with any key
+combination. This is configured in the <code>keys</code> file. The syntax of
+this file is like:</p>
+<p><strong>key</strong> "key combination" program options&#8230;</p>
+<p>For example:</p>
+<pre><code>key  "Alt+Ctrl+t"  xterm -rv
+key "Ctrl+Shift+r" icewm --restart
+runonce "Alt+F12"  "res_name.res_class" program_executable options</code></pre>
+<hr>
+<h2><a name="window-options-updated-2018-03-04"></a>Window Options (updated 2018-03-04)</h2>
+<p>The <strong>winoptions</strong> file is used to configure settings for individual
+application windows. Each line in this file must have one of the
+following formats:</p>
+<ul>
+<li>
+<p>
+<strong>window_name.window_class.option: argument</strong>
+</p>
+</li>
+<li>
+<p>
+<strong>window_name.window_role.option: argument</strong>
+</p>
+</li>
+<li>
+<p>
+<strong>window_class.option: argument</strong>
+</p>
+</li>
+<li>
+<p>
+<strong>window_name.option: argument</strong>
+</p>
+</li>
+<li>
+<p>
+<strong>window_role.option: argument</strong>
+</p>
+</li>
+<li>
+<p>
+<strong>.option: argument</strong>
+</p>
+</li>
+</ul>
+<p>The last format sets a default option value for all windows. Each
+window on the desktop should have <strong>name</strong> and <strong>class</strong> resources
+associated with it. Some applications also have a <strong>window role</strong>
+resource. They can be determined using the <code>xprop</code> utility. When used
+on a toplevel window, <code>xprop | grep -e CLASS -e ROLE</code> should output
+a line like this:</p>
+<pre><code>WM_CLASS = "name", "Class"</code></pre>
+<p>and may also display a line like this:</p>
+<pre><code>WM_WINDOW_ROLE = "window role"</code></pre>
+<p>It&#8217;s possible that an application&#8217;s <strong>name</strong> and/or <strong>class</strong> contains
+a dot character (<strong>.</strong>), which is also used by IceWM to separate
+<strong>name</strong>, <strong>class</strong> and <strong>role</strong> values. In this case precede the dot
+with the backslash character. In the following example, we suppose
+an application&#8217;s window has <code>the.name</code> as its <strong>name</strong> value and
+<code>The.Class</code> as its <strong>class</strong> value and for this combination we set
+<strong>option</strong> to <strong>argument</strong>.</p>
+<pre><code>the\.name.The\.Class.option: argument</code></pre>
+<p>Options that can be set per window are as follows:</p>
+<ul>
+<li>
+<p>
+<strong>icon</strong>
+</p>
+<p>The name of the icon.</p>
+</li>
+<li>
+<p>
+<strong>workspace</strong>
+</p>
+<p>Default workspace for window (number, counting from 0)</p>
+</li>
+<li>
+<p>
+<strong>layer</strong>
+</p>
+<p>The default stacking layer for the window. Layer can be one of the
+following seven strings:</p>
+<ul>
+<li>
+<p>
+<em>Desktop</em>
+Desktop window. There should be only one window in this layer.
+</p>
+</li>
+<li>
+<p>
+<em>Below</em>
+Below default layer.
+</p>
+</li>
+<li>
+<p>
+<em>Normal</em>
+Default layer for the windows.
+</p>
+</li>
+<li>
+<p>
+<em>OnTop</em>
+Above the default.
+</p>
+</li>
+<li>
+<p>
+<em>Dock</em>
+Layer for windows docked to the edge of the screen.
+</p>
+</li>
+<li>
+<p>
+<em>AboveDock</em>
+Layer for the windows above the dock.
+</p>
+</li>
+<li>
+<p>
+<em>Menu</em>
+Layer for the windows above the dock.
+</p>
+</li>
+</ul>
+<p>You can also use a number from 0 to 15.</p>
+</li>
+<li>
+<p>
+<strong>geometry</strong>
+</p>
+<p>The default geometry for the window. This geometry should be specified
+in the usual X11-geometry-syntax, formal notation:</p>
+<pre><code>[=][&lt;width&gt;{xX}&lt;height&gt;][{+-}&lt;xoffset&gt;{+-}&lt;yoffset&gt;]</code></pre>
+</li>
+<li>
+<p>
+<strong>tray</strong>
+</p>
+<p>The default tray option for the window. This affects both the tray
+and the task pane. Tray can be one of the following strings:</p>
+<ul>
+<li>
+<p>
+<em>Ignore</em>
+Don&#8217;t add an icon to the tray pane.
+</p>
+</li>
+<li>
+<p>
+<em>Minimized</em>
+Add an icon the the tray. Remove the task pane button when minimized.
+</p>
+</li>
+<li>
+<p>
+<em>Exclusive</em>
+Add an icon the the tray. Never create a task pane button.
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p>
+<strong>order: 0</strong>
+</p>
+<p>The sorting order of task buttons and tray icons. The default value
+is zero. Increasing positive values go farther right, while decreasing
+negative values go farther left. The order option applies to the task
+pane, the tray pane and the system tray.</p>
+</li>
+<li>
+<p>
+<strong>allWorkspaces: 0</strong>
+</p>
+<p>If set to 1, window will be visible on all workspaces.</p>
+</li>
+<li>
+<p>
+<strong>appTakesFocus: 0</strong>
+</p>
+<p>if set to 1, IceWM will assume the window supports the WM_TAKE_FOCUS
+protocol even if the window did not advertise that it does.</p>
+</li>
+<li>
+<p>
+<strong>dBorder: 1</strong>
+</p>
+<p>If set to 0, window will not have a border.</p>
+</li>
+<li>
+<p>
+<strong>dClose: 1</strong>
+</p>
+<p>If set to 0, window will not have a close button.</p>
+</li>
+<li>
+<p>
+<strong>dDepth: 1</strong>
+</p>
+<p>If set to 0, window will not have a depth button.</p>
+</li>
+<li>
+<p>
+<strong>dHide: 1</strong>
+</p>
+<p>If set to 0, window will not have a hide button.</p>
+</li>
+<li>
+<p>
+<strong>dMaximize: 1</strong>
+</p>
+<p>If set to 0, window will not have a maximize button.</p>
+</li>
+<li>
+<p>
+<strong>dMinimize: 1</strong>
+</p>
+<p>If set to 0, window will not have a minimize button.</p>
+</li>
+<li>
+<p>
+<strong>dResize: 1</strong>
+</p>
+<p>If set to 0, window will not have a resize border.</p>
+</li>
+<li>
+<p>
+<strong>dRollup: 1</strong>
+</p>
+<p>If set to 0, window will not have a shade button.</p>
+</li>
+<li>
+<p>
+<strong>dSysMenu: 1</strong>
+</p>
+<p>If set to 0, window will not have a system menu.</p>
+</li>
+<li>
+<p>
+<strong>dTitleBar: 1</strong>
+</p>
+<p>If set to 0, window will not have a title bar.</p>
+</li>
+<li>
+<p>
+<strong>doNotCover: 0</strong>
+</p>
+<p>if set to 1, this window will limit the workspace available for
+regular applications. At the moment the window has to be sticky to
+make it work.</p>
+</li>
+<li>
+<p>
+<strong>doNotFocus: 0</strong>
+</p>
+<p>if set to 1, IceWM will never give focus to the window.</p>
+</li>
+<li>
+<p>
+<strong>fClose: 1</strong>
+</p>
+<p>If set to 0, window will not be closable.</p>
+</li>
+<li>
+<p>
+<strong>fHide: 1</strong>
+</p>
+<p>If set to 0, window will not be hidable.</p>
+</li>
+<li>
+<p>
+<strong>fMaximize: 1</strong>
+</p>
+<p>If set to 0, window will not be maximizable.</p>
+</li>
+<li>
+<p>
+<strong>fMinimize: 1</strong>
+</p>
+<p>If set to 0, window will not be minimizable.</p>
+</li>
+<li>
+<p>
+<strong>fMove: 1</strong>
+</p>
+<p>If set to 0, window will not be movable.</p>
+</li>
+<li>
+<p>
+<strong>fResize: 1</strong>
+</p>
+<p>If set to 0, window will not be resizable.</p>
+</li>
+<li>
+<p>
+<strong>fRollup: 1</strong>
+</p>
+<p>If set to 0, window will not be shadable.</p>
+</li>
+<li>
+<p>
+<strong>forcedClose: 0</strong>
+</p>
+<p>if set to 1 and the application had not registered WM_DELETE_WINDOW,
+a close confirmation dialog won&#8217;t be offered upon closing the window.</p>
+</li>
+<li>
+<p>
+<strong>fullKeys: 0</strong>
+</p>
+<p>If set to 1, the window manager leave more keys (Alt+F?) to the
+application.</p>
+</li>
+<li>
+<p>
+<strong>ignoreNoFocusHint: 0</strong>
+</p>
+<p>if set to 1, IceWM will focus even if the window does not handle input.</p>
+</li>
+<li>
+<p>
+<strong>ignorePagerPreview: 0</strong>
+</p>
+<p>If set to 1, window will not appear in pager preview.</p>
+</li>
+<li>
+<p>
+<strong>ignorePositionHint: 0</strong>
+</p>
+<p>if set to 1, IceWM will ignore the position hint.</p>
+</li>
+<li>
+<p>
+<strong>ignoreQuickSwitch: 0</strong>
+</p>
+<p>If set to 1, window will not be accessible using QuickSwitch feature
+(Alt+Tab).</p>
+</li>
+<li>
+<p>
+<strong>ignoreTaskBar: 0</strong>
+</p>
+<p>If set to 1, window will not appear on the task bar.</p>
+</li>
+<li>
+<p>
+<strong>ignoreUrgentHint: 0</strong>
+</p>
+<p>if set to 1, IceWM will ignore it if the window sets the urgent hint.</p>
+</li>
+<li>
+<p>
+<strong>ignoreWinList: 0</strong>
+</p>
+<p>If set to 1, window will not appear in the window list.</p>
+</li>
+<li>
+<p>
+<strong>noFocusOnAppRaise: 0</strong>
+</p>
+<p>if set to 1, window will not automatically get focus as application
+raises it.</p>
+</li>
+<li>
+<p>
+<strong>noFocusOnMap: 0</strong>
+</p>
+<p>if set to 1, IceWM will not assign focus when the window is mapped
+for the first time.</p>
+</li>
+<li>
+<p>
+<strong>noIgnoreTaskBar: 0</strong>
+</p>
+<p>if set to 1, will show the window on the taskbar.</p>
+</li>
+<li>
+<p>
+<strong>nonICCCMconfigureRequest: 0</strong>
+</p>
+<p>if set to 1, IceWM assumes the application does not support the ICCCM
+standard wrt positioning and compensate for that.</p>
+</li>
+<li>
+<p>
+<strong>startFullscreen: 0</strong>
+</p>
+<p>if set to 1, window will cover the entire screen.</p>
+</li>
+<li>
+<p>
+<strong>startMaximized: 0</strong>
+</p>
+<p>if set to 1, window starts maximized.</p>
+</li>
+<li>
+<p>
+<strong>startMaximizedHorz: 0</strong>
+</p>
+<p>if set to 1, window starts maximized horizontally.</p>
+</li>
+<li>
+<p>
+<strong>startMaximizedVert: 0</strong>
+</p>
+<p>if set to 1, window starts maximized vertically.</p>
+</li>
+<li>
+<p>
+<strong>startMinimized: 0</strong>
+</p>
+<p>if set to 1, window starts minimized.</p>
+</li>
+</ul>
+<hr>
+<h2><a name="icon-handling"></a>Icon handling</h2>
+<h3><a name="generic"></a>Generic</h3>
+<p>The window manager expects to find two XPM files for each icon
+specified in the configuration files as <em>ICON</em>. They should be named
+like this:</p>
+<ul>
+<li>
+<p>
+<strong>ICON_16x16.xpm</strong>
+</p>
+<p>A small 16x16 pixmap.</p>
+</li>
+<li>
+<p>
+<strong>ICON_32x32.xpm</strong>
+</p>
+<p>A normal 32x32 pixmap.</p>
+</li>
+<li>
+<p>
+<strong>ICON_48x48.xpm</strong>
+</p>
+<p>A large 48x48 pixmap.</p>
+</li>
+</ul>
+<p>Other pixmap sizes like 20x20, 24x24, 40x40, 48x48, 64x64 might be
+used in the future. Perhaps we need a file format that can contain
+more than one image (with different sizes and color depths) like
+Windows&#8217;95 and OS/2 .ICO files.</p>
+<p>It would be nice to have a feature from OS/2 that varies the icon
+size with screen resolution (16x16 and 32x32 icons are quite small
+on 4000x4000 screens ;-)</p>
+<h3><a name="gdk-pixbuf"></a>GDK-Pixbuf</h3>
+<p>When icewm was configured with the <code>--enable-gdk-pixbuf</code> option all
+of GdkPixbuf&#8217;s image formats are supported. Use them by specifying
+the full filename or an absolute path:</p>
+<ul>
+<li>
+<p>
+<strong>ICON.bmp</strong>
+</p>
+<p>A PPM icon in your IconPath.</p>
+</li>
+<li>
+<p>
+<strong>/usr/share/pixmap/ICON.png</strong>
+</p>
+<p>An PNG image with absolute location.</p>
+</li>
+</ul>
+<hr>
+<h2><a name="mouse-cursors"></a>Mouse cursors</h2>
+<p>IceWM scans the theme and configuration directories for a subdirectory
+called <em>cursors</em> containing monochrome but transparent XPM files. To
+change the mouse cursor you have to use this filenames:</p>
+<ul>
+<li>
+<p>
+<strong>left.xbm</strong>
+</p>
+<p>Default cursor (usually pointer to the left).</p>
+</li>
+<li>
+<p>
+<strong>right.xbm</strong>
+</p>
+<p>Menu cursor (usually pointer to the right).</p>
+</li>
+<li>
+<p>
+<strong>move.xbm</strong>
+</p>
+<p>Window movement cursor.</p>
+</li>
+<li>
+<p>
+<strong>sizeTL.xbm</strong>
+</p>
+<p>Cursor when you resize the window by top left.</p>
+</li>
+<li>
+<p>
+<strong>sizeT.xbm</strong>
+</p>
+<p>Cursor when you resize the window by top.</p>
+</li>
+<li>
+<p>
+<strong>sizeTR.xbm</strong>
+</p>
+<p>Cursor when you resize the window by top right.</p>
+</li>
+<li>
+<p>
+<strong>sizeL.xbm</strong>
+</p>
+<p>Cursor when you resize the window by left.</p>
+</li>
+<li>
+<p>
+<strong>sizeR.xbm</strong>
+</p>
+<p>Cursor when you resize the window by right.</p>
+</li>
+<li>
+<p>
+<strong>sizeBL.xbm</strong>
+</p>
+<p>Cursor when you resize the window by bottom left.</p>
+</li>
+<li>
+<p>
+<strong>sizeB.xbm</strong>
+</p>
+<p>Cursor when you resize the window by bottom.</p>
+</li>
+<li>
+<p>
+<strong>sizeBR.xbm</strong>
+</p>
+<p>Cursor when you resize the window by bottom right.</p>
+</li>
+</ul>
+<hr>
+<h2><a name="themes"></a>Themes</h2>
+<p>Themes are used to configure the way the window manager looks. Things
+like fonts, colors, border sizes, button pixmaps can be configured. Put
+together they form a theme.</p>
+<p>Theme files are searched in the <code>themes</code> subdirectories.</p>
+<p>These directories contain other directories that contain related
+theme files and their .xpm files. Each theme file specifies fonts,
+colors, border sizes, &#8230;</p>
+<p>The theme to use is specified in <code>~/.icewm/theme</code> file:</p>
+<ul>
+<li>
+<p>
+<code>Theme = "nice/default.theme"</code>
+</p>
+<p>Name of the theme to use. Both the directory and theme file name must
+be specified.</p>
+</li>
+</ul>
+<p>If the theme directory contains a file named <em>fonts.dir</em> created by
+mkfontdir the theme directory is inserted into the X servers font
+search path.</p>
+<p><a href="https://themes.ice-wm.org">www.box-look.org</a> has a very large number
+of themes which were created by users of IceWM.</p>
+<hr>
+<h2><a name="command-line-options"></a>Command Line Options</h2>
+<p><code>icewm</code> supports the following options:</p>
+<table border="0" bgcolor="#e8e8e8" width="100%" cellpadding="4"><tr><td>
+<pre><code>-d, --display=NAME
+NAME of the X server to use.
+
+--client-id=ID
+Client id to use when contacting session manager.
+
+--sync
+Synchronize X11 commands.
+
+-c, --config=FILE
+Load preferences from FILE.
+
+-t, --theme=FILE
+Load theme from FILE.
+
+--postpreferences
+Print preferences after all processing.
+
+-V, --version
+Prints version information and exits.
+
+-h, --help
+Prints this usage screen and exits.
+
+--replace
+Replace an existing window manager.
+
+-r, --restart
+Tell the running icewm to restart itself.
+
+--configured
+Print the compile time configuration.
+
+--directories
+Print the configuration directories.
+
+-l, --list-themes
+Print a list of all available themes.</code></pre>
+</td></tr></table>
+<p>The restart option can be used to reload the IceWM configuration
+after modifications. It is the preferred way to restart IceWM from
+the command line or in scripts. To load a different theme from the
+command line, combine this with the <code>--theme=NAME</code> option like:</p>
+<pre><code>icewm -r -t CrystalBlue</code></pre>
+<p>The theme name will then be saved to the <em>theme</em> configuration file,
+before restarting IceWM.</p>
+<hr>
+<h2><a name="glossary"></a>Glossary</h2>
+<p>Resource Path
+A set of directories used by IceWM to locate resources like
+configuration files, themes, icons. See section <strong>The Resource Path</strong>.</p>
+<hr>
+<h2><a name="authors"></a>Authors</h2>
+<p>Authors having contributed to this document include Gallium, Macek,
+Hasselmann, Gijsbers, Bidulock and Bloch.</p>
+<hr>
+<h2><a name="see-also"></a>See Also</h2>
+<p><a href="https://ice-wm.org/man/icehelp">icehelp(1)</a>,
+<a href="https://ice-wm.org/man/icesh">icesh(1)</a>,
+<a href="https://ice-wm.org/man/icesound">icesound(1)</a>,
+<a href="https://ice-wm.org/man/icewm-env">icewm-env(5)</a>,
+<a href="https://ice-wm.org/man/icewm-focus_mode.html">icewm-focus_mode(5)</a>,
+<a href="https://ice-wm.org/man/icewm-keys">icewm-keys(5)</a>,
+<a href="https://ice-wm.org/man/icewm-menu-fdo">icewm-menu-fdo(1)</a>,
+<a href="https://ice-wm.org/man/icewm-menu">icewm-menu(5)</a>,
+<a href="https://ice-wm.org/man/icewm-preferences">icewm-preferences(5)</a>,
+<a href="https://ice-wm.org/man/icewm-prefoverride">icewm-prefoverride(5)</a>,
+<a href="https://ice-wm.org/man/icewm-programs">icewm-programs(5)</a>,
+<a href="https://ice-wm.org/man/icewm-session">icewm-session(1)</a>,
+<a href="https://ice-wm.org/man/icewm-set-gnomewm">icewm-set-gnomewm(1)</a>,
+<a href="https://ice-wm.org/man/icewm-shutdown">icewm-shutdown(5)</a>,
+<a href="https://ice-wm.org/man/icewm-startup">icewm-startup(5)</a>,
+<a href="https://ice-wm.org/man/icewm-theme">icewm-theme(5)</a>,
+<a href="https://ice-wm.org/man/icewm-toolbar">icewm-toolbar(5)</a>,
+<a href="https://ice-wm.org/man/icewm-winoptions">icewm-winoptions(5)</a>,
+<a href="https://ice-wm.org/man/icewm">icewm(1)</a>,
+<a href="https://ice-wm.org/man/icewmbg">icewmbg(1)</a>,
+<a href="https://ice-wm.org/man/icewmhint">icewmhint(1)</a>,
+<a href="https://ice-wm.org/man/icewmtray">icewmtray(1)</a>.</p>
+<p></p>
+<p></p>
+<hr><p><small>
+Version 1.4.2<br>
+Last updated
+ 2020-08-25 02:06:46 CEST
+</small></p>
+</body>
+</html>

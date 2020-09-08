@@ -1,0 +1,15 @@
+Begin3
+Title:          IceWM Window Manager
+Version:        1.8.0
+Entered-date:   2020-08-25
+Description:    Window manager for X11
+Keywords:       window-manager, x11, fast, small, source, w'95, os2, motif.
+Author:         marko.macek@gmx.net (Marko Macek)
+Maintained-by:  mathias.hasselmann@gmx.de (Mathias Hasselmann)
+Primary-site:   https://github.com/bbidulock/icewm/
+                298 KB icewm-1.8.0.src.tar.bz2
+                383 KB icewm-1.8.0.src.tar.gz
+Home-page:      https://ice-wm.org/
+Platforms:      X11, Xpm, c++
+Copying-policy: LGPL
+End
